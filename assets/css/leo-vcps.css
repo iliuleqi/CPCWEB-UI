@@ -1,0 +1,420 @@
+:root{    
+    --input-border-color: #bbb;
+    --input-border: solid 1px var(--input-border-color);
+    --input-height: 32px;
+    --select-bg: #fcfcfc;
+    --select-color :#04bbb7;
+    --font-color: #999;
+}
+
+/* scroll - Start -----------------------------------------------------------------S*/
+.scroll{
+    height: 100%;
+    position: relative;
+}
+.scroll>.scroll-con{
+    height: 100%;
+    overflow: hidden;
+}
+.scroll-bar{
+    position: absolute;
+    right: 2px;
+    width: 8px;
+    border-radius: 4px;
+    background: #ccc;
+    z-index: 20;
+    opacity: 0.8;
+}
+.scroll-bar:hover{
+    opacity: 0.9;
+}
+.active.scroll-bar{
+    opacity: 1;
+}
+.table .scroll-bar , .select .scroll-bar , .small-bar .scroll-bar{
+    width: 6px;
+}
+.scroll-unsel{
+    user-select:none;
+}
+/* scroll - End -------------------------------------------------------------------E*/
+
+/* form -> sel-input */
+input{
+    border: var(--input-border);
+    height: var(--input-height);
+    width: 90px;
+    background: transparent;
+    outline: 0;
+    font-size: 16px;
+    text-align: center;
+}
+.sel-input{
+    position: relative;
+    /* height: var(--input-height); */
+}
+.sel-list{
+    position: absolute;
+    top: 32px;
+    margin-top: 2px;
+    right: 0;
+    left: 0;
+    height: auto;
+    border: var(--input-border);
+    background: var(--select-bg);
+    z-index: 9;
+}
+.sel-list .scroll-con{
+    display: block;
+    padding: 2px;
+    overflow: hidden;
+    max-height: 166px;
+}
+.sel-list li{
+    display: block;
+    line-height: 30px;
+    margin: 1px 0;
+    padding: 0 14px;
+}
+/* .sel-input:before{
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 32px;
+    border-left: var(--input-border);
+} */
+.sel-input.name-input:before{
+    border-left: var(--name-input-border);
+}
+.name-input .sel-list{
+    left: 80px;
+}
+/* form -> select */
+.sel-input.select input{
+    padding-right: 40px;
+}
+.sel-input.select:after{
+    content: "";
+    position: absolute;
+}
+.sel-input.select:after{
+    color: var(--input-border-color);
+    border-top: solid 5px;
+    border-left: solid 6px transparent;
+    border-right: solid 6px transparent;
+    right: 16px;
+    top: 50%;
+    transform: translate(50%,-50%);
+}
+.select>.sel-list li:hover{
+    background: #f3f3f3;
+}
+.select>.sel-list li.active{
+    color: var(--select-color);
+}
+
+/* form -> sel-date */
+.sel-input.date i{
+    pointer-events: none;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translate(50%,-50%);
+    background: url("date.png");
+    width: 12px;
+    height: 12px;
+}
+.sel-input.date .sel-date{
+    position: absolute;
+    background: var(--select-bg);
+    border: var(--input-border);
+    width: 254px;
+    right: 0;
+    top: var(--input-height);
+    margin-top: 2px;
+    font-size: 14px; 
+    z-index: 99;    
+    color:var(--font-color);
+}
+.name-input.sel-input.date .sel-date{
+    right: 0;
+    left: unset;
+}
+.sd-top{    
+    line-height:32px;
+    display: flex;
+    align-content: stretch;
+    align-items: stretch;    
+}
+.sd-top .a-prev, .sd-top .a-next{
+    width: 50px;
+    color:var(--input-border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sd-top .a-prev:hover, .sd-top .a-next:hover{
+    color: var(--select-color);
+}
+.sd-top .a-prev:before, .sd-top .a-next:before{
+    content: "";
+    display: inline-block;
+    vertical-align: top;
+    width: 8px;
+    height: 8px;
+    border-left: solid 1px;
+    border-bottom: solid 1px;
+}
+.sd-top .a-prev:before{
+    transform: rotate(45deg);
+}
+.sd-top .a-next:before{
+    transform: rotate(-135deg);
+}
+.sd-top .a-ym{
+    flex: 1;
+    overflow: hidden;
+    text-align: center;
+}
+
+.list-day{}
+.list-day>.week{
+    height:24px;
+    padding:0 10px;
+    background:#ededed;
+}
+.list-day>.week>span{
+    width:28px;
+    line-height:24px;
+    text-align:center;
+    display:inline-block;
+    vertical-align:top;
+    margin-left:6px;
+    color:#666;
+    text-align:center;  
+}
+.list-day>.week>span:first-child{
+    margin-left:0;
+}
+.list-day>.days{
+    padding:10px 10px 4px 4px;
+}
+.list-day>.days>a{
+    width:28px;
+    height:28px;
+    margin-left:6px;
+    margin-bottom:6px;
+    border-radius:14px;
+    display:inline-block;
+    vertical-align:top;
+    text-align:center;
+    line-height:28px;
+}
+.list-day>.days>a.enable{
+    color: #5b7f8c;
+}
+
+.list-day>.days>a.enable:hover{
+    background: none;
+    cursor: default;
+}
+.list-month, .list-year{
+    padding: 20px 37px 12px 37px;
+}
+.list-month>a, .list-year>a{
+    width: 42px;
+    height: 42px;
+    text-align: center;
+    line-height: 42px;
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 26px 8px 0;
+    border-radius: 21px;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+.ly2>a{
+    font-size: 12px;
+    line-height: 16px;
+    padding: 4px;
+}
+.list-month>a:nth-child(3n), .list-year>a:nth-child(3n){
+    margin-right: 0;
+}
+.list-day>.days>a:hover, .list-month>a:hover, .list-year>a:hover{
+    background:var(--select-li-hover-bg);
+}
+.list-day>.days>a.active, .list-month>a.active, .list-year>a.active{
+    background:var(--select-color);
+    color:#fff;
+}
+
+.hhmm{
+    width: 220px;
+    height: 220px;
+    position: relative;
+    background: #ebebeb;
+    border-radius: 120px;
+    margin: 17px;
+}
+.hh, .mm{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -15px;
+    margin-top: -15px;
+}
+.hh>a, .mm>a{
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    transform-origin: center center;    
+}
+.hh>a> span, .mm>a span{
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    position: absolute;
+    transform-origin: center center; 
+}
+.hh>a:nth-child(n+13){
+    font-size: 12px;
+    color: #888;
+}
+.hh>a:hover{
+    background: #ddd; 
+}
+.hh:after, .mm:after{
+    content: "";
+    height: 8px;
+    width: 8px;
+    background: var(--select-color);
+    border-radius: 4px;
+    position: absolute;
+    top: 11px;
+    left: 11px;
+}
+.hh>a.active{
+    background: var(--select-color);
+    color: #fff;
+}
+.a-line{
+    position: absolute;
+    height: 1px;
+    transform-origin: left top; 
+    background: var(--select-color);
+    top: 15px;
+    left: 15px;
+}
+
+.mm{
+    margin-top: -5px;
+    margin-left: -14px;
+}
+.mm>a, .mm>a span{
+    height: 10px;
+    width: 28px;  
+    line-height: 10px; 
+}
+.mm>a{
+    font-size: 0;
+}
+.mm>a:nth-child(5n){
+    font-size: 14px;
+}
+.mm>a>span{
+    pointer-events: none;
+    z-index: 19;
+    margin-left: 14px;
+}
+.mm:after{
+    left: 10px;
+    top: 1px;
+}
+.mm>a:before{
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 4px;    
+    border-radius: 2px;
+    top: 3px;
+    left: 12px;
+    pointer-events: none;
+    background: #ddd;
+    z-index: 20;
+}
+.mm>a:nth-child(5n):before{
+    width: 8px;
+}
+.mm>a:after{
+    content: "";
+    position: absolute;
+    width: 28px;
+    height: 28px;    
+    border-radius: 14px;
+    top: -9px;
+    left: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+.mm>a:hover{
+    z-index: 17;
+}
+.mm>a:hover:after{
+    z-index: 1;
+    background: rgba(0,0,0,0.1);
+}
+.mm>a:hover:before{
+    background: var(--select-color);
+}
+.mm>a.active, .mm>a.active:hover{
+    color: var(--select-color);
+}
+.mm>a.active:before, .mm>a.active:hover:before{
+    background: var(--select-color);
+}
+.mm .a-line{
+    width: 82px;
+    top: 5px;
+    left: 14px;
+}
+
+.hmsave, .ymdhmsave{
+    height: 41px;
+    border-top: var(--input-border);
+    line-height: 40px;
+    display: flex;
+    justify-content: space-around;
+}
+.hmsave>span{
+    width: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 10px;
+}
+.hmsave>span>a{
+    height: 25px;
+    line-height: 24px;
+    margin-left: 8px;
+    padding: 0 6px;
+    border-bottom: solid 1px var(--select-color);
+    color: var(--select-color);
+}
+.hmsave>a{
+    width: 52px;
+    color: var(--select-color);
+    text-align: center;
+}
+.ymdhmsave>a{
+    padding: 0 10px;
+}
+.ymdhmsave>a:nth-child(2){
+    margin-right: 20px;
+}
+
+
