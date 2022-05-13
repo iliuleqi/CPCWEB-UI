@@ -1,0 +1,885 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>智慧党建-党建考核</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <!-- ---------------------------引入js文件 s -->
+    <script src="./assets/javascript/browser.min.js"></script>
+    <script src="./assets/javascript/browser-polyfill.min.js"></script>
+    <!-- ---------------------------引入js文件 e -->
+
+    <script src="./assets/javascript/vue.js"></script>
+    <!--调试版-->
+    <script src="./assets/javascript/echarts.min.js"></script>
+    <script src="./assets/jp4/dzzjc.js"></script>
+    <script src="./assets/jp4/dyjc.js"></script>
+    <script src="./assets/jp4/dycf.js"></script>
+    <script src="./assets/jp4/dzzpj.js"></script>
+    <script src="./assets/jp4/dypj.js"></script>
+    <script src="./assets/jp1/axios.min.js"></script>
+    <script src="./assets/javascript/jquery-3.6.0.min.js"></script>
+    <script src="./assets/layer/layer.js"></script>
+    <script src="./assets/javascript/sql-wasm.js"></script>
+    <script src="./assets/jp4/json.js"></script>
+    <!-- <script src="../js/common/pubFunction.js"></script> -->
+    <script src="/dj_web/js/common/pubFunction.js?v=20200811"></script>
+    <script type="text/x-template" id="item-template">
+      <li>
+          <div @click="onClickTree(item)">{{ item.text }}</div>
+          <ul>
+              <tree-item
+              class="item"
+              v-for="(child, index) in item.children"
+              :key="index"
+              :item="child"
+              ></tree-item>
+          </ul>
+      </li>
+    </script>
+    <link rel="stylesheet" href="./assets/css/application.css">
+</head>
+<body>
+    <div id="app">
+        <div id="top-header">
+            
+            <div class="organ">
+                <div class="link border" v-on:click="openTree">{{CurDeptTitle}}</div>
+                <div style="display: inline-flex;justify-content: center; align-items: center; margin-left: 30px;">
+                    <img src="assets/images/zuo.png" alt="" style="width: 20px; height: 20px; margin-top: 4px;" @click="year_l()">
+                    <div class="link border" style="margin: 0 5px;">{{CurYear}}</div>
+                    <img src="assets/images/you.png" alt="" style="width: 20px; height: 20px; margin-top: 4px;"  @click="year_r()">
+                </div>
+            </div>
+            <div class="center-title">党建考核</div>
+            <div class="data-update-time">
+                <div>
+                    <h3> 数据更新时间 </h3>
+                    <p>{{UpTime}}</p>
+                </div>
+                <a href="index.html" class="link border">返回</a>
+            </div>
+        </div>
+        <div class="tree" v-if="treeIsOpen">
+            <ul>
+                <tree-item
+                    class="item"
+                    :item="treeData"
+                ></tree-item>
+            </ul>    
+        </div>
+        <div class="main" style="height: calc(58% - 105px);">
+            <div class="left"  style="padding: 0 10px 10px 10px; position: relative;"> 
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">党组织积分排名</div>
+                    <div class="echarts-wrap djkh flex" style="flex-direction: column; width: 80%; margin: 0 auto; color: #FFF">
+                        <div class="flex-item flex" style="align-items: center;" v-if="dzzjf_option.length>0">
+                            <div class="order">排名</div>
+                            <div class="belong_to" style="color: #37E5FF"> 组织名称 </div>
+                            <div class="position" style="color: #37E5FF;width:96px"> 积分</div>
+                        </div>
+                        
+                        <div class="flex-item flex" v-for="(item, index) in dzzjf_option" :key="index" style="align-items: center;" @click="open_(item.url,'党支部积分页面')">
+                            <div class="order" v-if="(index+1) <= 3 && item.name!=''"><img :src="'./assets/images/'+ (index + 1)+'.svg'" alt="" width="30"></div>
+                            <div class="order" v-else> <span v-if="item.name!=''">{{index+1}}</span></div>
+                            <div class="belong_to"> {{item.name}} </div>
+                            <div class="position"> {{item.point}} </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="center" style="padding: 0 10px 10px 10px; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">党员积分排名</div>
+                    <div class="echarts-wrap djkh flex" style="flex-direction: column; width: 80%; margin: 0 auto; color: #FFF">
+                        <div class="flex-item flex" style="align-items: center;" v-if="dyjf_option.length>0">
+                            <div class="order">排名</div>
+                            <div class="avatar" style="color: #37E5FF">头像</div>
+                            <div class="name" style="color: #37E5FF"> 党员 </div>
+                            <div class="position" style="color: #37E5FF;"> 积分</div>
+                            <div class="belong_to" style="color: #37E5FF"> 所属组织</div>
+                        </div>
+                        <div class="flex-item flex" @click="open_(item.url,'党员积分页面')" v-for="(item, index) in dyjf_option" :key="index" style="align-items: center;">
+                            <div class="order" v-if="(index+1) <= 3 "><img :src="'./assets/images/'+ (index + 1)+'.svg'" v-if="item.name!=''" alt="" width="30"></div>
+                            <div class="order" v-else> <span v-if="item.name!=''">{{index+1}}</span></div>
+                            <div class="avatar" v-if="item.name!=''"><div><img :src='item.img' onerror="this.src='./assets/images/none.png';" v-if="item.name!=''" /></div></div>
+                            <div class="name"> {{item.name}} </div>
+                            <div class="position"> {{item.point}} </div>
+                            <div class="belong_to" :title="item.belong_to"> {{item.belong_to}} </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="right" style="padding: 0 10px 10px 10px; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">党组织考核</div>
+                    <div ref="dzzpj" class="echarts-wrap" style="height: calc(50% - 80px);"></div>
+                    <div class="data-title">党员考核</div>
+                    <div class="echarts-wrap" ref="dypj" style="height: calc(50% - 80px);"></div>
+                </div>
+            </div>
+        </div>
+        <div class="main" style="height: 42%;">
+            <div class="flex" style="width: 40%;padding: 0 10px 10px 10px; position: relative;"> 
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">党组织奖惩</div>
+                    <div class="echarts-wrap">
+                        <div class="echarts-wrap-item" ref="dzzjc"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="center" style="padding: 0 10px 10px 10px; position: relative;"> 
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box" > 
+                    <div class="data-title">党员奖励</div>
+                    <div class="echarts-wrap">
+                        <div class="echarts-wrap-item" ref="dyjc"></div>
+                    </div>
+                </div>
+            </div>
+                <div class="right" style="padding: 0 10px 10px 10px; position: relative;"> 
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">党员惩罚</div>
+                    <div class="echarts-wrap">
+                        <div class="echarts-wrap-item" ref="dycf"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <script type="text/babel">
+function rq(variable)
+{
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){return pair[1];}
+    }
+    return "";
+}
+var DEFAULT_STR_TMP=(rq("t")=="")?"":"TMP";
+var DEFAULT_PAGE='04';
+var dzzjc_k=[];
+var dzzjc_v1=[];
+var dzzjc_v2=[];
+var dyjc_k=[];
+var dyjc_v1=[];
+var dyjc_v2=[];
+var dzzpj_kv=[];
+var dypj_kv=[];
+var dycf_k=[];
+var dycf_v=[];
+
+
+//按Code得到下钻URL
+var lstConfig=[];
+function getConfigUrlByCode(c)
+{
+    for(var i=0;i<lstConfig.length;i++)
+    {
+        if(lstConfig[i].c==c)
+        {
+           var u=lstConfig[i].url
+            if(u=='')u="/not_configed";
+            return u;
+        }
+    }
+    return "/not_configed";
+}
+
+//设置单一条目的下钻URL
+var lstUrl=[];
+function set_url(k,v)
+{
+    for(var i=0;i<lstUrl.length;i++)
+    {
+        if(lstUrl[i].k==k)
+        {
+            lstUrl[i].v=v;
+            return;
+        }
+    }
+    lstUrl.push({k:k,v:v});
+}
+function get_url(k)
+{
+    for(var i=0;i<lstUrl.length;i++)
+    {
+        if(lstUrl[i].k==k)
+        {
+            return lstUrl[i].v;
+        }
+    }
+    return "";
+}
+
+
+Vue.component("tree-item", {
+    template: "#item-template",
+    props: {
+        item: Object
+    },
+    methods: {
+        onClickTree(x){
+            // console.log(x)
+            app.treeIsOpen=false;
+            app.CurDeptTitle=x.text;
+            app.CurDeptGuid=x.id;
+            app.reload_page();
+        }
+    }
+});
+
+
+
+
+//弹出下钻窗口
+function open_(u,t)
+{
+    // console.log(u,t)
+    return;
+    if(u!=null && u!='') {
+        top.openWindowNew({
+            title: t,
+            maxmin: true,
+            area: ['85%', '620px'],
+            content: u
+        }, this, "back");
+    }
+}
+
+var db=null;
+var charts=[];
+for(var i=0;i<20;i++)
+{
+    charts.push(null);
+}
+
+function set_dzzjc_kv(typ,k,v,url)
+{
+    var bFound=false;
+    for(var i=0;i<dzzjc_k.length;i++)
+    {
+        if(dzzjc_k[i]==k)
+        {
+            if(typ==1)
+            {
+                dzzjc_v1[i]={
+                    value:v*1,
+                    url:url
+                };
+            }
+            if(typ==2)
+            {
+                dzzjc_v2[i]={
+                    value:v*1,
+                    url:url
+                };      
+            }
+            return;
+        }
+    }
+    dzzjc_k.push(k);
+    if(typ==1)
+    {
+        dzzjc_v1.push({
+            value:v*1,
+            url:url
+        });
+        dzzjc_v2.push({
+            value:0,
+            url:url
+        });  
+    }
+    if(typ==2)
+    {
+        dzzjc_v1.push({
+            value:0,
+            url:url
+        });
+        dzzjc_v2.push({
+            value:v*1,
+            url:url
+        });        
+    }
+}
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            CurDeptTitle:'',//当前组织名称
+            CurDeptGuid:'',//当前组织GUID
+            CurYear:new Date().getFullYear(),//当前年
+            ArrYears:[],//年份数组
+            PosYear:0,//年的指针
+            UpTime:'',
+            dzzjf_option: [],
+            dyjf_option: [],
+            treeIsOpen: false,
+            openUrlFlag: false,
+            treeData: {},
+            url_t: false,
+            url_j: false,
+        },
+        created(){
+            var m=new Date().getMonth()+1;
+            if(m<10)m='0'+m;
+            var d=new Date().getDate() - 1;
+            if(d<10)d='0'+d;
+            var dtToday=(new Date().getFullYear())+'-'+m+'-'+d;
+            this.UpTime = dtToday + ' 16:02:59'
+            
+            this.url_t = this.getQueryVariable("t");
+            this.url_j = this.getQueryVariable("j");
+            // console.log(this.url_t,this.url_j)
+        },
+        mounted() { 
+            let _this = this
+            // initSqlJs({
+            //     locateFile: file => `./assets/javascript/${file}`
+            // }).then(
+            //     function(SQL){
+            //         db = new SQL.Database();
+            //         db.run("CREATE TABLE cfg (c,name,url,tim);");
+            //         db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+            //         _this.fetch_party_dept();
+            //     }
+            // );   
+            // this.$nextTick(() => {
+                
+            // })
+            _this.fetch_party_dept();
+        },
+        methods: {
+            open_(u,t)
+            {
+                return;
+                if(u!=null && u!='') {
+                    top.openWindowNew({
+                        title: t,
+                        maxmin: true,
+                        area: ['85%', '620px'],
+                        content: u
+                    }, this, "back");
+                }
+            },
+             year_l()
+             {
+                this.PosYear--;
+                if(this.PosYear<0)this.PosYear=0;
+                if(this.PosYear>this.ArrYears.length-1)this.PosYear=this.ArrYears.length-1;
+                this.CurYear=this.ArrYears[this.PosYear];
+                this.reload_page();
+             },
+            year_r()
+            {
+                this.PosYear++;
+                if(this.PosYear<0)this.PosYear=0;
+                if(this.PosYear>this.ArrYears.length-1)this.PosYear=this.ArrYears.length-1;
+                this.CurYear=this.ArrYears[this.PosYear];
+                this.reload_page();
+            },
+            getQueryVariable(variable)
+            {
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                for (var i=0;i<vars.length;i++) {
+                        var pair = vars[i].split("=");
+                        if(pair[0] == variable){return pair[1];}
+                }
+                return(false);
+            },
+            openTree(){
+                this.treeIsOpen = !this.treeIsOpen
+            },
+            reloadChart(){
+               var idx=0;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.dzzjc)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,'党组织奖惩页面');
+                    });
+                }
+                // console.log(dzzjc_k,dzzjc_v1,dzzjc_v2)
+                charts[idx].setOption(getp4_dzzjc(dzzjc_k,dzzjc_v1,dzzjc_v2))
+                
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.dyjc)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,"党员奖惩页面");
+                    });
+                }
+                charts[idx].setOption(getp4_dyjc(dyjc_k,dyjc_v1))
+                
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.dycf)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,"党员奖惩页面");
+                    });
+                }
+                charts[idx].setOption(getp4_dycf(dycf_k,dycf_v,dycf_v))
+                
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.dzzpj)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,"党组织考核页面");
+                    });
+                }
+                charts[idx].setOption(getp4_dzzpj(dzzpj_kv))
+                
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.dypj)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u);
+                    });
+                }
+                charts[idx].setOption(getp4_dzzpj(dypj_kv))
+        },
+        init() {
+
+        },
+        fetch_party_dept(){
+            let _this = this;
+            if(this.url_j){
+                var j=jp4Json1
+                var partys=j.obj;
+                this.CurDeptTitle=partys.text;               
+                this.CurDeptGuid=partys.id;               
+                this.treeData=partys;               
+                this.reload_page();
+            }else{
+                axios.get('../dj_web/bigscreen/bigscreenAPIAction!partyAdministrativeTree.action?partyAdministrative.boolPublicValue=false&strIsDiff=2&numIsLose=1', {
+                    params: {
+                        token: 'token',
+                    }
+                })
+                .then(function (ret) {
+                    // console.log(ret)
+                    // console.log("获取党组织...")
+                    var j=JSON.parse(ret.data);
+                    var partys=j.obj;
+                    // console.log(partys) 
+                    _this.CurDeptTitle=partys.children[0].text;               
+                    _this.CurDeptGuid=partys.children[0].id;                  
+                    _this.treeData=partys;               
+                    _this.reload_page(); 
+                })
+                .catch(function (error) {
+                });
+            }
+        },
+        reload_page(){
+            // console.log("加载本屏数据源...");
+            //app.CurDeptGuid='ee63ce9e4cc342f591e9ce6741d3f124';
+
+            // console.log("组织GUID="+this.CurDeptGuid);
+
+            var j=undefined;
+            //年份
+            var years=undefined;
+            var setupDatas=undefined;
+            var staticDatas=undefined;
+
+            let _this = this;
+
+            if(this.url_j){
+                j=jp4Json2
+                //年份
+                years=j.objList.years;
+                setupDatas=j.objList.setupDatas;
+                staticDatas=j.objList.staticDatas;
+            }else{
+                axios.get('/dj_web/bigscreen/bigscreenAPIAction!getStaticDataByDept.action', {
+                    params: {
+                        "searchData.strDept":this.CurDeptGuid,
+                        "searchData.strP":DEFAULT_PAGE,
+                        "searchData.strYear":this.CurYear,
+                        "searchData.strTmp":DEFAULT_STR_TMP,//TMP
+                    }
+                })
+                .then(function (ret) {
+                    var data=ret.data;
+                    var j=JSON.parse(data)
+                    //年份
+                    years=j.objList.years;
+                    setupDatas=j.objList.setupDatas;
+                    staticDatas=j.objList.staticDatas;
+                    // console.log(years)
+
+                    // console.log("配置信息")
+                
+
+                //转换年数组，变成数字型
+                _this.ArrYears=[];
+                for(var i=0;i>years.length;i++){
+                    _this.ArrYears.push(years[i]*1);
+                }
+                // years.forEach((x,i)=>{
+                //     //console.log(x);
+                //     app.ArrYears.push(x*1);
+                // });
+
+                //从小到大排序
+                _this.ArrYears.sort();
+               
+                //取当前年，设置指针
+                for(var i=0;i<_this.ArrYears.length;i++){
+                    if(_this.ArrYears[i]==_this.CurYear)
+                    {
+                        _this.PosYear=i;
+                    }
+                    
+                }
+                // app.ArrYears.forEach((x,i)=>{
+                //     if(x==app.CurYear)
+                //     {
+                //         app.PosYear=i;
+                //     }
+                // });
+                
+                // db.run("drop TABLE cfg ");
+                // db.run("CREATE TABLE cfg (c,name,url,tim);");
+                lstConfig=[];
+                for(var i=0;i<setupDatas.length;i++){
+                    var x = setupDatas[i];
+                    lstConfig.push({
+                        "c":x.strStatCode,
+                        "name":x.strStatName,
+                        "url":x.strStatUrl,
+                        "tim":x.strStatInterval,
+                    });
+                }
+                window.localStorage.setItem('cfg',JSON.stringify(lstConfig))
+                // setupDatas.forEach((x,i)=>{
+                //     lstConfig.push({
+                //         "c":x.strStatCode,
+                //         "name":x.strStatName,
+                //         "url":x.strStatUrl,
+                //         "tim":x.strStatInterval,
+                //     });
+
+
+                //     db.exec("insert into cfg (c,name,url,tim) values ($c,$name,$url,$tim)",{
+                //         "$c":x.strStatCode,
+                //         "$name":x.strStatName,
+                //         "$url":x.strStatUrl,
+                //         "$tim":x.strFormattedTime,
+                //     })
+                // });
+                for(var i=0;i<lstConfig.length;i++){
+                    if(_this.UpTime=='' && lstConfig[i].tim!='')
+                        {
+                            _this.UpTime=lstConfig[i].tim;
+                        }
+                }
+                // db.each("SELECT * from cfg", 
+                //     function (row){
+                //         console.log(row)
+                //         if(app.UpTime=='' && row.tim!='')
+                //         {
+                //             app.UpTime=row.tim;
+                //         }
+                //     }
+                // );
+                
+                //本屏数据
+                // console.log("本屏具体数据");
+                var tbl = [];
+                // db.exec("drop table tbl ");
+                // db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+                for(var i=0;i<staticDatas.length;i++){
+                    var x = staticDatas[i]
+                            
+                            var sameFlag = true;
+                        for(var j=0;j<tbl.length; j++) {
+                            if (tbl[j].guid == x.strGuid) {
+                                sameFlag = false;
+                                break;
+                            }
+                             //党员考核
+                             if (tbl[j].guid != x.strGuid && tbl[j].c == x.strStatCode 
+                                && x.strStatCode == '0406'&&tbl[j].k == x.strStatKey) {
+                                    tbl[j].v = tbl[j].v*1 + x.strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                           
+                            
+                        }
+                        if (sameFlag) {
+                            tbl.push({
+                                "guid":x.strGuid,
+                                "y":x.strStatYear,
+                                "m":x.strStatMonth,
+                                "dept":x.strStatDept,
+                                "c":x.strStatCode,
+                                "name":x.strStatName,
+                                "k":x.strStatKey,
+                                "v":x.strStatValue,
+                                "kid":x.strStatKId,
+                            })
+                        }
+                }
+                // staticDatas.forEach((x,i)=>{
+                //     //console.log(x);
+                //     db.exec("insert into tbl (guid,y,m,dept,c,name,k,v,kid) values ($guid,$y,$m,$dept,$c,$name,$k,$v,$kid)",{
+                //         "$guid":x.strGuid,
+                //         "$y":x.strStatYear,
+                //         "$m":x.strStatMonth,
+                //         "$dept":x.strStatDept,
+                //         "$c":x.strStatCode,
+                //         "$name":x.strStatName,
+                //         "$k":x.strStatKey,
+                //         "$v":x.strStatValue,
+                //         "$kid":x.strStatKId,
+                //     })
+                // });
+                window.localStorage.setItem('tbl',JSON.stringify(tbl))
+                _this.reset_data();
+                
+                for(var i=0;i<tbl.length;i++){
+                    if(tbl[i].c == "0401"){
+                       
+                    }
+                   
+                    _this.make_packet(tbl[i]);
+                }
+                // db.each("SELECT * from tbl order by c,v*1 desc", 
+                //     function (row){
+                //         //console.log(row)
+                //         app.make_packet(row);
+                //     }
+                // );
+               
+                _this.dzzjf_option.sort(function(a,b){
+                    return b.point - a.point
+                })
+                _this.dyjf_option.sort(function(a,b){
+                    return b.point - a.point
+                })
+                var l1=_this.dzzjf_option.length;
+                for(var i=0;i<10-l1;i++)
+                {
+                    _this.dzzjf_option.push({name: '', point: ''});
+                }
+                _this.dzzjf_option=_this.dzzjf_option.slice(0,10);
+                var l2=_this.dyjf_option.length;
+                for(var i=0;i<10-l2;i++)
+                {
+                    _this.dyjf_option.push({name: '', point: '',img:''});
+                }
+                _this.dyjf_option=_this.dyjf_option.slice(0,10);
+
+                // console.log("sum ....")
+                // db.each("SELECT c,k,kid,name,sum(v) as v from tbl group by c,name,k order by c,v*1 desc", 
+                //     function (row){
+                //         console.log(row)      
+                for(var i=0;i<tbl.length;i++){
+                        var row = tbl[i];                  
+                        var c=row.c;
+                        var k=row.k;
+                        var v=row.v;
+                        var kid=row.kid;
+                        var name=row.name;
+                        var deptid=_this.CurDeptGuid;
+                        var sd=_this.CurYear+'-01-01';
+                        var ed=_this.CurYear+'-12-31';
+                        var url=getConfigUrlByCode(c);
+                        if(c=='040301')
+                        {
+                            url += "&strMenuParameter=organizationbrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                            set_dzzjc_kv(1,k,v,url);
+                        }
+                        if(c=='040302')
+                        {
+                            url += "&strMenuParameter=organizationbrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                            set_dzzjc_kv(2,k,v,url);
+                        }
+
+                        if(c=='040401') {
+                            url += "&strMenuParameter=personbrain;1;"+ kid +";" +_this.CurYear+";"+deptid;
+                            dyjc_k.push(k);
+                            dyjc_v1.push({value:v*1,url:url});
+                        }
+
+                        if(c=='040402') {
+                            url += "&strMenuParameter=personbrain;2;"+ kid +";" +_this.CurYear+";"+deptid;
+                            dycf_k.push(k);
+                            dycf_v.push({value:v*1,url:url});
+                        }
+
+                        //党组织评价
+                        if(c=='0405')
+                        {
+                            url += "&strMenuParameter=partybrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                            dzzpj_kv.push({
+                                name: k,
+                                value: v*1,
+                                url:url
+                            });
+
+                        }
+
+                        //党员评价
+                        if(c=='0406')
+                        {
+                            dypj_kv.push({
+                                name: k,
+                                value: v*1,
+                                url:url
+                            });
+                        }
+                    }
+               // );
+               _this.reloadChart();
+                setTimeout(function(){
+                   // app.reload_page();
+                },10000);
+                })
+                .catch(function (error) {
+                });
+            }
+        },
+        reset_data(){
+            // console.log("reset data...");
+            this.dzzjf_option=[];
+            this.dyjf_option=[];
+            dzzjc_k=[];
+            dzzjc_v1=[];
+            dzzjc_v2=[];
+            dyjc_k=[];
+            dyjc_v1=[];
+            dyjc_v2=[];
+            dzzpj_kv=[];
+            dypj_kv=[];
+            dycf_k=[];
+            dycf_v=[];
+            this.reloadChart();
+        },
+        make_packet(r){
+            var guid=r.guid;
+            var dept=r.dept;
+            var y=r.y*1;
+            var m=r.m*1;
+            var c=r.c;
+            var name=r.name;
+            var k=r.k;
+            var v=r.v;
+            var kid=r.kid;
+            var deptid=this.CurDeptGuid;
+            var sd=this.CurYear+'-01-01';
+            var ed=this.CurYear+'-12-31';
+            var url=getConfigUrlByCode(c);
+
+            //党组织积分排名
+            if(c=='0401')
+            {
+               
+                url += getConfigUrlByCode(c) + "&strMenuParameter=orgbrain;"+this.CurYear+";"+this.CurDeptGuid;
+                this.dzzjf_option.push({name: k, point: v,url:url});
+            }
+          
+            //党员积分
+            if(c=='040201')
+            {
+                var b=false;
+                for(var i=0;i<this.dyjf_option.length;i++)
+                {
+                    //if(i>9)return;
+                    if(this.dyjf_option[i].kid==kid)
+                    {
+                        url += "&strMenuParameter=orgbrain;"+this.CurYear+";"+this.CurDeptGuid;
+                        this.dyjf_option[i].name=k;
+                        this.dyjf_option[i].point=v;
+                        this.dyjf_option[i].url=url;
+                        b=true;
+                    }
+                }
+                if(!b)
+                {
+                    this.dyjf_option.push({name: k, point: v, kid:kid,url:url});
+                }                   
+            }
+            if(c=='040202')
+            {
+                var b=false;
+                for(var i=0;i<this.dyjf_option.length;i++)
+                {
+                   // if(i>9)return;
+                    if(this.dyjf_option[i].kid==kid)
+                    {
+                        this.dyjf_option[i].img=v;
+                        b=true;
+                    }
+                }
+                if(!b)
+                {
+                    this.dyjf_option.push({name: k, img:v,kid:kid,url:url});
+                } 
+            }
+            if(c=='040203')
+            {
+                var b=false;
+                for(var i=0;i<this.dyjf_option.length;i++)
+                {
+                    //if(i>9)return;
+                    if(this.dyjf_option[i].kid==kid)
+                    {
+                        this.dyjf_option[i].belong_to=v;
+                        b=true;
+                    }
+                }
+                if(!b)
+                {
+                    this.dyjf_option.push({name: k, belong_to: v,kid:kid,url:url});
+                } 
+            }
+
+        },
+
+    }
+    })
+    </script>
+</body>
+
+</html>

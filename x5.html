@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>智慧党建-督察督办</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+
+  <!-- ---------------------------引入js文件 s -->
+  <script src="./assets/javascript/browser.min.js"></script>
+  <script src="./assets/javascript/browser-polyfill.min.js"></script>
+  <!-- ---------------------------引入js文件 e -->
+  <script src="./assets/javascript/vue.js"></script>
+  <!--调试版-->
+  <script src="./assets/javascript/echarts.min.js"></script>
+  <!-- <script src="./assets/javascript/datav.min.vue.js"></script> -->
+  <script src="./assets/jp5/dbwcl.js"></script>
+  <script src="./assets/jp5/dbyl.js"></script>
+  <script src="./assets/jp5/zzdb.js"></script>
+  <script src="./assets/jp5/swdb.js"></script>
+  <script src="./assets/javascript/jquery-3.6.0.min.js"></script>
+  <script src="./assets/layer/layer.js"></script>
+  <script src="./assets/jp5/axios.min.js"></script>
+  <script src="./assets/javascript/sql-wasm.js"></script>
+  <script src="./assets/jp5/json.js"></script>
+  <!-- <script src="../js/common/pubFunction.js"></script> -->
+  <script type="text/x-template" id="item-template">
+      <li>
+          <div @click="onClickTree(item)">{{ item.text }}</div>
+          <ul>
+              <tree-item
+              class="item"
+              v-for="(child, index) in item.children"
+              :key="index"
+              :item="child"
+              ></tree-item>
+          </ul>
+      </li>
+    </script>
+  <link rel="stylesheet" href="./assets/css/application.css">
+  <style>
+    .top_right {
+      right: 0;
+    }
+
+    .bottom_left {
+      left: 0;
+      bottom: 0;
+    }
+
+    .bottom_right {
+      right: 0;
+      bottom: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="top-header">
+
+      <div class="organ">
+        <div class="link border" v-on:click="openTree">{{CurDeptTitle}}</div>
+        <div style="display: inline-flex;justify-content: center; align-items: center; margin-left: 30px;">
+          <img src="assets/images/zuo.png" alt="" style="width: 20px; height: 20px; margin-top: 4px;" @click="year_l()">
+          <div class="link border" style="margin: 0 5px;">{{CurYear}}</div>
+          <img src="assets/images/you.png" alt="" style="width: 20px; height: 20px; margin-top: 4px;" @click="year_r()">
+        </div>
+      </div>
+      <div class="center-title">督察督办</div>
+      <div class="data-update-time">
+        <div>
+          <h3> 数据更新时间 </h3>
+          <p>{{ UpTime }}</p>
+        </div>
+        <a href="index.html" class="link border">返回</a>
+      </div>
+    </div>
+    <div class="tree" v-if="treeIsOpen">
+      <ul>
+        <tree-item class="item" :item="treeData"></tree-item>
+      </ul>
+    </div>
+    <div style=" width: 32vw; float: left; margin: 0 1vw; height: 90vh;">
+      <div style="height: 20vh; position: relative;">
+        <span class="top_left"></span>
+        <span class="top_right"></span>
+        <span class="bottom_left"></span>
+        <span class="bottom_right"></span>
+        <div class="border_box">
+          <div class="data-title">待办状态</div>
+          <div class="flex" style="height: 60%; justify-content: center; align-items: center;">
+            <div class="flex-item" @click="open_(get_url('0501.正常数量'))">
+              <!-- <dv-digital-flop 
+                                    :config="stateA" 
+                                    style="width:100%;height:60px;"
+                                    :color="['red', 'green']" backgroundColor="blue" 
+                                >
+                                </dv-digital-flop> -->
+              <div style="text-align: center;font-size:48px;color:#73B66B">{{stateA.number[0]}}</div>
+              <div style="font-size: 20px; color: #F2F2F2; text-align: center;">正常</div>
+            </div>
+            <div class="flex-item" @click="open_(get_url('0501.预警数量'))">
+              <!-- <dv-digital-flop                                 
+                                    :config="stateB" 
+                                    style="width:100%;height:60px;"
+                                    :color="['red', 'green']" backgroundColor="blue" 
+                                >
+                                </dv-digital-flop> -->
+              <!-- <div :style=`font-size:${stateB.style.fontSize}px;color:${stateB.style.fill};` style="text-align: center;">{{stateB.number[0]}}</div> -->
+              <div style="text-align: center;font-size:48px;color:#FFCB18">{{stateB.number[0]}}</div>
+              <div style="font-size: 20px; color: #F2F2F2; text-align: center;">预警</div>
+            </div>
+            <div class="flex-item" @click="open_(get_url('0501.超期数量'))">
+              <!-- <dv-digital-flop 
+                                    :config="stateC" 
+                                    style="width:100%;height:60px;"
+                                    :color="['red', 'green']" backgroundColor="blue" 
+                                >
+                                </dv-digital-flop> -->
+              <div style="text-align: center;font-size:48px;color:#FF6D31">{{stateC.number[0]}}</div>
+              <div style="font-size: 20px; color: #F2F2F2; text-align: center;">超期</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="height: 28vh; margin: 1vh 0; position: relative;">
+        <span class="top_left"></span>
+        <span class="top_right"></span>
+        <span class="bottom_left"></span>
+        <span class="bottom_right"></span>
+        <div class="border_box">
+          <div class="data-title">待办完成质量</div>
+          <div ref="dbwcl" class="echarts-wrap" style="width: 95%;;height:75%;">
+          </div>
+        </div>
+      </div>
+      <div style="width: 100%; height: 39vh; position: relative;">
+        <span class="top_left"></span>
+        <span class="top_right"></span>
+        <span class="bottom_left"></span>
+        <span class="bottom_right"></span>
+        <div class="border_box">
+          <div class="data-title">月度统计</div>
+          <div class="echarts-wrap">
+            <div class="echarts-wrap-item" ref="dbyl"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div style="width: 65vw; float: left; height: 90vh;">
+      <div style="width: 100%; height: 49vh;  position: relative;">
+        <span class="top_left"></span>
+        <span class="top_right"></span>
+        <span class="bottom_left"></span>
+        <span class="bottom_right"></span>
+        <div class="border_box">
+          <div class="data-title">待办统计</div>
+          <div class="flex" style="height: 80%;">
+            <div class="flex-item" style="position: relative;">
+              <div ref="c_dbyl_zc" style="width: 80%; height: 90%; margin: 0 auto"></div>
+              <div style="font-size: 20px; color: #F2F2F2; text-align: center;">正常</div>
+            </div>
+            <div class="flex-item" style="position: relative;">
+              <div ref="c_dbyl_yj" style="width: 80%; height: 90%; margin: 0 auto"></div>
+              <div style="font-size: 20px; color: #F2F2F2; text-align: center;">预警</div>
+            </div>
+            <div class="flex-item" style="position: relative;">
+              <div ref="c_dbyl_cq" style="width: 80%; height: 90%; margin: 0 auto"></div>
+              <div style="font-size: 20px; color: #F2F2F2; text-align: center;">超期</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="width: 32vw; margin-top: 1vh; height: 39vh; float: left; margin-right: 1vw; position: relative;">
+        <span class="top_left"></span>
+        <span class="top_right"></span>
+        <span class="bottom_left"></span>
+        <span class="bottom_right"></span>
+        <div class="border_box" class="flex">
+          <div class="data-title">组织督办</div>
+          <div class="echarts-wrap">
+            <div class="echarts-wrap-item" ref="zzdb" style="width: 95%;;height:95%;"></div>
+          </div>
+        </div>
+      </div>
+      <div style="width: 32vw; margin-top: 1vh; height: 39vh; float: left; position: relative;">
+        <span class="top_left"></span>
+        <span class="top_right"></span>
+        <span class="bottom_left"></span>
+        <span class="bottom_right"></span>
+        <div class="border_box">
+          <div class="data-title">事务督办</div>
+          <div class="echarts-wrap">
+            <div class="echarts-wrap-item" ref="swdb" style="width: 95%;;height:95%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <script type="text/babel">
+    function rq(variable) {
+      var query = window.location.search.substring(1);
+      var vars = query.split("&");
+      for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        if (pair[0] == variable) { return pair[1]; }
+      }
+      return "";
+    }
+    var DEFAULT_STR_TMP = (rq("t") == "") ? "" : "TMP";
+    var DEFAULT_PAGE = '05';
+    var dbwcl_kv = [];
+    var dbyl_k = [];
+    var dbyl_v1 = [];
+    var dbyl_v2 = [];
+    var zzdb_k = [];
+    var zzdb_v = [];
+    var swdb_k = [];
+    var swdb_v = [];
+    var K0504_1_k = [];
+    var K0504_1_v = [];
+    var K0504_2_k = [];
+    var K0504_2_v = [];
+    var K0504_3_k = [];
+    var K0504_3_v = [];
+
+    //按Code得到下钻URL
+    var lstConfig = [];
+    function getConfigUrlByCode(c) {
+      for (var i = 0; i < lstConfig.length; i++) {
+        if (lstConfig[i].c == c) {
+          var u = lstConfig[i].url
+          if (u == '') u = "/not_configed";
+          return u;
+        }
+      }
+      return "/not_configed";
+    }
+
+    //设置单一条目的下钻URL
+    var lstUrl = [];
+    function set_url(k, v) {
+      for (i = 0; i < lstUrl.length; i++) {
+        if (lstUrl[i].k == k) {
+          lstUrl[i].v = v;
+          return;
+        }
+      }
+      lstUrl.push({ k: k, v: v });
+    }
+    function get_url(k) {
+      for (var i = 0; i < lstUrl.length; i++) {
+        if (lstUrl[i].k == k) {
+          return lstUrl[i].v;
+        }
+      }
+      return "";
+    }
+
+    function getp5_new1(k, v1, color) {
+      var lxhdl_option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            lineStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0,
+                  color: 'rgba(0, 255, 233,0)'
+                }, {
+                  offset: 0.5,
+                  color: 'rgba(255, 255, 255,1)',
+                }, {
+                  offset: 1,
+                  color: 'rgba(0, 255, 233,0)'
+                }],
+                global: false
+              }
+            },
+          },
+        },
+        grid: {
+          top: '15%',
+          left: '10%',
+          right: '10%',
+          bottom: '15%',
+          containLabel: true
+        },
+        dataZoom: [//滑动条
+          {
+            show: k.length > 4 ? true : false,
+            type: 'slider',
+            startValue: 0,
+            endValue: 3,
+            height: 10,
+            showDetail: false,
+          }
+        ],
+        xAxis: [{
+          type: 'category',
+          minInterval: 1,
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#00BFF3',
+              opacity: 0.23
+            }
+          },
+
+          axisLabel: {
+            color: '#A582EA',
+            width: 100
+          },
+          splitLine: {
+            show: false
+          },
+          boundaryGap: false,
+          data: k
+
+        }],
+        yAxis: [{
+          type: 'value',
+          minInterval: 1,
+          min: 0,
+          // max: 140,
+          splitNumber: 4,
+          splitLine: {
+            show: false,
+            lineStyle: {
+              color: '#00BFF3',
+              opacity: 0.23
+            }
+          },
+          axisLine: {
+            show: false,
+            lineStyle: {
+              color: '#00BFF3',
+              opacity: 0.23
+            }
+          },
+          axisLabel: {
+            show: true,
+            margin: 20,
+            textStyle: {
+              color: '#fff',
+
+            },
+          },
+          axisTick: {
+            show: false,
+          },
+        }],
+        series: [
+          {
+            type: 'line',
+            showAllSymbol: true,
+            symbol: 'circle',
+            symbolSize: 10,
+            lineStyle: {
+              normal: {
+                color: color,
+              },
+            },
+            label: {
+              show: false,
+              position: 'top',
+              textStyle: {
+                color: '#A582EA',
+              }
+            },
+            itemStyle: {
+              color: "#fff",
+              borderColor: "#A582EA",
+              borderWidth: 2,
+            },
+            data: v1
+          },
+        ]
+      };
+      return lxhdl_option
+    }
+
+
+    function getyy(k, v, _rgb) {
+      return {
+        grid: {
+          top: -20
+        },
+        xAxis: {
+          data: k,
+          axisLine: {
+            show: true,
+            style: {
+              stroke: '#FFF',
+              lineWidth: 1
+            }
+          },
+          nameTextStyle: {
+            fill: '#fff',
+            fontSize: 10
+          },
+          splitLine: {
+            show: false
+          },
+          axisTick: {
+            show: true,
+            style: {
+              stroke: '#FFF',
+              lineWidth: 1
+            }
+          },
+          axisLabel: {
+            style: {
+              fill: '#FFF',
+              fontSize: 16,
+              rotate: 0
+            }
+          }
+        },
+        yAxis: {
+          data: 'value',
+          axisLine: {
+            show: false,
+            style: {
+              stroke: '#FFF',
+              lineWidth: 1
+            }
+          },
+          axisTick: {
+            show: false
+          },
+          splitLine: {
+            show: false
+          },
+          minInterval: 10,
+          axisLabel: {
+            style: {
+              fill: '#FFF',
+              fontSize: 12,
+              rotate: 0
+            }
+          }
+        },
+        series: [
+          {
+            data: v,
+            type: 'line',
+            gradient: {
+              color: ['#5baa60', '#5baa60']
+            },
+            lineStyle: {
+              lineWidth: 5,
+              stroke: _rgb,
+            },
+            barWidth: 18
+          }
+        ]
+      }
+    }
+
+
+
+    Vue.component("tree-item", {
+      template: "#item-template",
+      props: {
+        item: Object
+      },
+      methods: {
+        onClickTree(x) {
+          // console.log(x)
+          app.treeIsOpen = false;
+          app.CurDeptTitle = x.text;
+          app.CurDeptGuid = x.id;
+          app.reload_page();
+        }
+      }
+    });
+
+
+    function year_l() {
+      this.PosYear--;
+      if (this.PosYear < 0) this.PosYear = 0;
+      if (this.PosYear > this.ArrYears.length - 1) this.PosYear = this.ArrYears.length - 1;
+      this.CurYear = this.ArrYears[this.PosYear];
+      this.reload_page();
+    }
+
+    function year_r() {
+      this.PosYear++;
+      if (this.PosYear < 0) this.PosYear = 0;
+      if (this.PosYear > this.ArrYears.length - 1) this.PosYear = this.ArrYears.length - 1;
+      this.CurYear = this.ArrYears[this.PosYear];
+      this.reload_page();
+    }
+
+    function getTypeById(id) {
+      if (id == 1) return "组织生活";
+      if (id == 2) return "任务";
+      if (id == 3) return "学习";
+      if (id == 4) return "发展党员";
+      if (id == 5) return "党费";
+      if (id == 6) return "结对共建";
+      if (id == 7) return "诉求反馈";
+      if (id == 8) return "新闻审核";
+      if (id == 9) return "通知审核";
+      if (id == 10) return "呈报审核";
+      if (id == 11) return "督察督办";
+      if (id == 12) return "党费提醒";
+      if (id == 13) return "心得体会反馈";
+      if (id == 14) return "建议献策反馈";
+      if (id == 15) return "书记信箱回复";
+      if (id == 16) return "党组织审核";
+      if (id == 17) return "微心愿回复";
+      if (id == 18) return "计划上报审核";
+      if (id == 19) return "党组织/党员奖惩审核";
+      if (id == 20) return "纪检信箱回复";
+      if (id == 21) return "党员承诺";
+      if (id == 22) return "党组织派人谈话";
+      if (id == 23) return "推荐和确定入党积极分子";
+      if (id == 24) return "确定发展对象";
+      if (id == 25) return "预备党员接收阶段--上级党委审批";
+      if (id == 26) return "提出转正申请";
+      if (id == 27) return "预备党员的教育考察和转正--上级党委审批";
+      if (id == 0) return "全部类型";
+      return "";
+    }
+
+    //弹出下钻窗口
+    function open_(u, t) {
+
+      // console.log(u)
+      if (u != null && u != '') {
+        top.openWindowNew({
+          title: t,
+          maxmin: true,
+          area: ['85%', '620px'],
+          content: u
+        }, this, "back");
+      }
+
+      if (this.openUrlFlag) {
+        top.openWindowNew({
+          title: '',
+          maxmin: true,
+          area: ['85%', '620px'],
+          content: u
+        }, this, "back");
+      } else {
+        // console.log("不好意思，没进去！")
+      }
+    }
+
+    var db = null;
+    var charts = [];
+    for (var i = 0; i < 20; i++) {
+      charts.push(null);
+    }
+
+    //格式化，翻拍器，那玩意的数值如果是0，不显示，设为-1，在这里转一下
+    function formatter(number) {
+      if (number < 0) return "0";
+      return number;
+    }
+
+    function set_dbyl_kv(typ, k, v, url) {
+      var bFound = false;
+      for (i = 0; i < dbyl_k.length; i++) {
+
+        if (dbyl_k[i] == k) {
+          if (typ == 1) {
+            dbyl_v1[i] = {
+              value: v * 1 + dbyl_v1[i].value * 1,
+              url: url
+            };
+          }
+          if (typ == 2) {
+            dbyl_v2[i] = {
+              value: v * 1 + dbyl_v2[i].value * 1,
+              url: url
+            };
+          }
+          return;
+        }
+      }
+      dbyl_k.push(k);
+      if (typ == 1) {
+        dbyl_v1.push({
+          value: v * 1,
+          url: url
+        });
+        dbyl_v2.push({
+          value: 0,
+          url: url
+        });
+      }
+      if (typ == 2) {
+        dbyl_v1.push({
+          value: 0,
+          url: url
+        });
+        dbyl_v2.push({
+          value: v * 1,
+          url: url
+        });
+      }
+    }
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        CurDeptTitle: '',//当前组织名称
+        CurDeptGuid: '',//当前组织GUID
+        CurYear: new Date().getFullYear(),//当前年
+        ArrYears: [],//年份数组
+        PosYear: 0,//年的指针
+        UpTime: '',
+
+        stateA: {
+          number: [0],
+          toFixed: 0,
+          content: '{nt}',
+          formatter,
+          style: {
+            fontSize: 48,
+            fill: '#73B66B'
+          }
+        },
+        stateB: {
+          number: [0],
+          formatter,
+          style: {
+            fontSize: 48,
+            fill: '#FFCB18'
+          }
+        },
+        stateC: {
+          number: [0],
+          formatter,
+          style: {
+            fontSize: 48,
+            fill: '#FF6D31'
+          }
+        },
+        optionY2: {},
+        optionY3: {},
+        optionYl: {},
+        treeIsOpen: false,
+        treeData: {},
+        url_t: false,
+        url_j: false,
+      },
+      created() {
+        var m = new Date().getMonth() + 1;
+        if (m < 10) m = '0' + m;
+        var d = new Date().getDate() - 1;
+        if (d < 10) d = '0' + d;
+        var dtToday = (new Date().getFullYear()) + '-' + m + '-' + d;
+        this.UpTime = dtToday + ' 16:02:59'
+
+        this.url_t = this.getQueryVariable("t");
+        this.url_j = this.getQueryVariable("j");
+        // console.log(this.url_t,this.url_j)
+      },
+      mounted() {
+        let _this = this
+        // initSqlJs({
+        //     locateFile: file => `./assets/javascript/${file}`
+        // }).then(
+        //     function(SQL){
+        //         db = new SQL.Database();
+        //         db.run("CREATE TABLE cfg (c,name,url,tim,ref_time);");
+        //         db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+        //         _this.fetch_party_dept();
+        //     }
+        // );  
+        // this.$nextTick(() => {})
+
+        _this.fetch_party_dept();
+      },
+      methods: {
+        open_(u, t) {
+          if (u != null && u != '') {
+            top.openWindowNew({
+              title: t,
+              maxmin: true,
+              area: ['85%', '620px'],
+              content: u
+            }, this, "back");
+          }
+        },
+        get_url(k) {
+          for (var i = 0; i < lstUrl.length; i++) {
+            if (lstUrl[i].k == k) {
+              return lstUrl[i].v;
+            }
+          }
+          return "";
+        },
+        year_l() {
+          this.PosYear--;
+          if (this.PosYear < 0) this.PosYear = 0;
+          if (this.PosYear > this.ArrYears.length - 1) this.PosYear = this.ArrYears.length - 1;
+          this.CurYear = this.ArrYears[this.PosYear];
+          this.reload_page();
+        },
+        year_r() {
+          this.PosYear++;
+          if (this.PosYear < 0) this.PosYear = 0;
+          if (this.PosYear > this.ArrYears.length - 1) this.PosYear = this.ArrYears.length - 1;
+          this.CurYear = this.ArrYears[this.PosYear];
+          this.reload_page();
+        },
+        getQueryVariable(variable) {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] == variable) { return pair[1]; }
+          }
+          return (false);
+        },
+        openTree() {
+          this.treeIsOpen = !this.treeIsOpen
+        },
+        reloadChart() {
+          var idx = 0;
+          if (charts[idx] == null) {
+            charts[idx] = echarts.init(this.$refs.dbwcl)
+            charts[idx].on('click', function (p) {
+              var u = p.data.url;
+              open_(u);
+            });
+          }
+          charts[idx].setOption(getp5_dbwcl(dbwcl_kv))
+
+          idx++;
+          if (charts[idx] == null) {
+            charts[idx] = echarts.init(this.$refs.dbyl)
+            charts[idx].on('click', function (p) {
+              // console.log(p);
+              var u = p.data.url;
+              open_(u);
+            });
+          }
+
+          charts[idx].setOption(getp5_dbyl(dbyl_k, dbyl_v1, dbyl_v2, this.CurYear))
+
+          idx++;
+          if (charts[idx] == null) {
+            charts[idx] = echarts.init(this.$refs.zzdb)
+            charts[idx].on('click', function (p) {
+              open_(p.data.url);
+            });
+          }
+
+          charts[idx].setOption(getp5_zzdb(zzdb_k, zzdb_v))
+
+          idx++;
+          if (charts[idx] == null) {
+            charts[idx] = echarts.init(this.$refs.swdb)
+            charts[idx].on('click', function (p) {
+              // console.log(p)
+              open_(p.data.url);
+            });
+          }
+
+          //事务督办：去重，合并，
+          //'0506'
+          // {
+          //  value: v * 1,
+          //  url: url
+          // }
+          var swdb_k_temp = [];
+          var swdb_v_temp = [];
+          if (swdb_k && 0 < swdb_k.length) {
+            var isHave = false;
+            for (var i_temp = 0, len_out = swdb_k.length; i_temp < len_out; i_temp++) {
+              isHave = false;
+              for (var j_temp = 0, len_in = swdb_k_temp.length; j_temp < len_in; j_temp++) {
+                if (swdb_k[i_temp] == swdb_k_temp[j_temp]) {
+                  isHave = true;
+                  swdb_v_temp[j_temp].value = Number(swdb_v_temp[j_temp].value) + Number(swdb_v[i_temp].value);
+                }
+              }
+              if (!isHave) {
+                swdb_k_temp.push(swdb_k[i_temp]);
+                swdb_v_temp.push(swdb_v[i_temp]);
+              }
+            }
+          }
+          swdb_k = swdb_k_temp;
+          swdb_v = swdb_v_temp;
+          // console.log("swdb_k", swdb_k);
+          //console.log("swdb_v", swdb_v);
+          charts[idx].setOption(getp5_swdb(swdb_k, swdb_v));
+
+          idx++;
+          if (charts[idx] == null) {
+            charts[idx] = echarts.init(this.$refs.c_dbyl_zc)
+            charts[idx].on('click', function (p) {
+              open_(p.data.url);
+            });
+          }
+          charts[idx].setOption(getp5_new1(K0504_1_k, K0504_1_v, "rgba(91, 170, 96, 1)"))
+
+
+          idx++;
+          if (charts[idx] == null) {
+            charts[idx] = echarts.init(this.$refs.c_dbyl_yj)
+            charts[idx].on('click', function (p) {
+              open_(p.data.url);
+            });
+          }
+          charts[idx].setOption(getp5_new1(K0504_2_k, K0504_2_v, "rgba(250, 188, 37, 1)"))
+
+
+          idx++;
+          if (charts[idx] == null) {
+            charts[idx] = echarts.init(this.$refs.c_dbyl_cq)
+            charts[idx].on('click', function (p) {
+              open_(p.data.url);
+            });
+          }
+          charts[idx].setOption(getp5_new1(K0504_3_k, K0504_3_v, "rgba(255, 96, 46, 1)"))
+
+        },
+        init() {
+
+        },
+        fetch_party_dept() {
+          let _this = this;
+          if (this.url_j) {
+            var j = jp5Json1
+            var partys = j.obj;
+            // console.log(partys) 
+            this.CurDeptTitle = partys.text;
+            this.CurDeptGuid = partys.id;
+            this.treeData = partys;
+            this.reload_page();
+          } else {
+            axios.get('/dj_web/bigscreen/bigscreenAPIAction!partyAdministrativeTree.action?partyAdministrative.boolPublicValue=false&strIsDiff=2&numIsLose=1', {
+              params: {
+                token: 'token',
+              }
+            })
+              .then(function (ret) {
+                // console.log(ret)
+                // console.log("获取党组织...")
+                var j = JSON.parse(ret.data);
+                var partys = j.obj;
+                // console.log(partys) 
+                _this.CurDeptTitle = partys.children[0].text;
+                _this.CurDeptGuid = partys.children[0].id;
+                _this.treeData = partys;
+                _this.reload_page();
+              })
+              .catch(function (error) {
+              });
+          }
+        },
+        reload_page() {
+          // console.log("加载本屏数据源...");
+          //this.CurDeptGuid='ee63ce9e4cc342f591e9ce6741d3f124';
+          // console.log("组织GUID="+this.CurDeptGuid);
+
+          let _this = this;
+          var j = undefined;
+          //年份
+          var years = undefined;
+          var setupDatas = undefined;
+          var staticDatas = undefined;
+          if (this.url_j) {
+            j = jp5Json2
+            //年份
+            years = j.objList.years;
+            setupDatas = j.objList.setupDatas;
+            staticDatas = j.objList.staticDatas;
+          } else {
+            axios.get('/dj_web/bigscreen/bigscreenAPIAction!getStaticDataByDept.action', {
+              params: {
+                "searchData.strDept": this.CurDeptGuid,
+                "searchData.strP": DEFAULT_PAGE,
+                "searchData.strYear": this.CurYear,
+                "searchData.strTmp": DEFAULT_STR_TMP,//TMP
+              }
+            })
+              .then(function (ret) {
+                // console.log("配置信息")
+                var data = ret.data;
+                j = JSON.parse(data);
+                //年份
+                years = j.objList.years;
+                setupDatas = j.objList.setupDatas;
+
+                staticDatas = j.objList.staticDatas;
+
+                // console.log(years)
+
+                //转换年数组，变成数字型
+                _this.ArrYears = [];
+                for (var i = 0; i > years.length; i++) {
+                  _this.ArrYears.push(years[i] * 1);
+                }
+                // years.forEach((x,i)=>{                    
+                //     this.ArrYears.push(x*1);
+                // });
+                //从小到大排序
+                _this.ArrYears.sort();
+                //取当前年，设置指针
+                for (var i = 0; i < _this.ArrYears.length; i++) {
+                  if (_this.ArrYears[i] == _this.CurYear) {
+                    _this.PosYear = i;
+                  }
+
+                }
+                // this.ArrYears.forEach((x,i)=>{
+                //     if(x==this.CurYear)
+                //     {
+                //         this.PosYear=i;
+                //     }
+                // });
+
+                // db.run("drop TABLE cfg ");
+                // db.run("CREATE TABLE cfg (c,name,url,tim,ref_time);");
+                lstConfig = [];
+                for (var i = 0; i < setupDatas.length; i++) {
+                  var x = setupDatas[i];
+                  lstConfig.push({
+                    "c": x.strStatCode,
+                    "name": x.strStatName,
+                    "url": x.strStatUrl,
+                    "tim": x.strStatInterval,
+                  });
+                }
+                window.localStorage.setItem('cfg', JSON.stringify(lstConfig))
+                // setupDatas.forEach((x,i)=>{
+
+                //     lstConfig.push({
+                //         "c":x.strStatCode,
+                //         "name":x.strStatName,
+                //         "url":x.strStatUrl,
+                //         "tim":x.strStatInterval,
+                //     });
+
+                //     //console.log(x)
+                //     db.exec("insert into cfg (c,name,url,tim,ref_time) values ($c,$name,$url,$tim,$ref_time)",{
+                //         "$c":x.strStatCode,
+                //         "$name":x.strStatName,
+                //         "$url":x.strStatUrl,
+                //         "$tim":x.strFormattedTime,
+                //         "$ref_time":x.strStatInterval
+                //     })
+                // });
+                for (var i = 0; i < lstConfig.length; i++) {
+                  if (_this.UpTime == '' && lstConfig[i].tim != '') {
+                    _this.UpTime = lstConfig[i].tim;
+                  }
+                }
+                // db.each("SELECT * from cfg", 
+                //     function (row){
+                //         //console.log(row)
+                //         if(this.UpTime=='' && row.tim!='')
+                //         {
+                //             this.UpTime=row.tim;
+                //         }
+                //     }
+                // );
+
+                //本屏数据
+
+                var tbl = [];
+                // db.exec("drop table tbl ");
+                // db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+                for (var i = 0; i < staticDatas.length; i++) {
+                  var x = staticDatas[i]
+                  var sameFlag = true;
+
+                  for (var j = 0; j < tbl.length; j++) {
+                    if (tbl[j].guid == staticDatas[i].strGuid) {
+                      sameFlag = false;
+                      break;
+                    }
+
+                    //待办一览 正常
+                    if (tbl[j].guid != staticDatas[i].strGuid && tbl[j].c == staticDatas[i].strStatCode
+                      && staticDatas[i].strStatCode == '050401' && tbl[j].k == staticDatas[i].strStatKey) {
+                      tbl[j].v = tbl[j].v * 1 + staticDatas[i].strStatValue * 1;
+                      sameFlag = false;
+                      break;
+                    }
+                    //待办一览 预警
+                    if (tbl[j].guid != staticDatas[i].strGuid && tbl[j].c == staticDatas[i].strStatCode
+                      && staticDatas[i].strStatCode == '050402' && tbl[j].k == staticDatas[i].strStatKey) {
+                      tbl[j].v = tbl[j].v * 1 + staticDatas[i].strStatValue * 1;
+                      sameFlag = false;
+                      break;
+                    }
+                    //待办一览 超期
+                    if (tbl[j].guid != staticDatas[i].strGuid && tbl[j].c == staticDatas[i].strStatCode
+                      && staticDatas[i].strStatCode == '050403' && tbl[j].k == staticDatas[i].strStatKey) {
+                      tbl[j].v = tbl[j].v * 1 + staticDatas[i].strStatValue * 1;
+                      sameFlag = false;
+                      break;
+                    }
+
+
+                  }
+                  if (sameFlag) {
+                    tbl.push({
+                      "guid": x.strGuid,
+                      "y": x.strStatYear,
+                      "m": x.strStatMonth,
+                      "dept": x.strStatDept,
+                      "c": x.strStatCode,
+                      "name": x.strStatName,
+                      "k": x.strStatKey,
+                      "v": x.strStatValue,
+                      "kid": x.strStatKId,
+                    })
+                  }
+                }
+                window.localStorage.setItem('tbl', JSON.stringify(tbl))
+                // staticDatas.forEach((x,i)=>{
+                //     //console.log(x);
+                //     db.exec("insert into tbl (guid,y,m,dept,c,name,k,v,kid) values ($guid,$y,$m,$dept,$c,$name,$k,$v,$kid)",{
+                //         "$guid":x.strGuid,
+                //         "$y":x.strStatYear,
+                //         "$m":x.strStatMonth,
+                //         "$dept":x.strStatDept,
+                //         "$c":x.strStatCode,
+                //         "$name":x.strStatName,
+                //         "$k":x.strStatKey,
+                //         "$v":x.strStatValue,
+                //         "$kid":x.strStatKId,
+                //     })
+                // });
+                _this.reset_data();
+                for (var i = 0; i < tbl.length; i++) {
+                  _this.make_packet(tbl[i]);
+                }
+                // db.each("SELECT * from tbl", 
+                //     function (row){
+                //         //console.log(row)
+                //         this.make_packet(row);
+                //     }
+                // );
+                // console.log("sum ....")
+
+                // db.each("SELECT c,name,k,kid,sum(v) as v from tbl group by c,name,k,kid order by c,k",
+                //     function (row){
+                //console.log(row)    
+                for (var i = 0; i < tbl.length; i++) {
+                  var row = tbl[i];
+                  var c = row.c;
+                  var k = row.k;
+                  var v = row.v;
+                  var kid = row.kid;
+                  var name = row.name;
+                  var deptid = _this.CurDeptGuid;
+                  var sd = _this.CurYear + '-01-01';
+                  var ed = _this.CurYear + '-12-31';
+                  var url = getConfigUrlByCode(c) + '' + kid + '&bs.deptId=' + deptid + '&bs.bd=' + sd + '&bs.ed=' + ed;
+
+
+
+                  /* if(c=='0501' && k=='正常数量')
+                      {
+                          set_url("0501.正常数量",url);
+                          app.stateA={
+                              number: [v*1],
+                              formatter,
+                              style:{
+                                  fontSize: 48,
+                                  fill: '#73B66B'
+                              }
+                          }
+                          console.log("0501.正常数量",v);
+                      }
+                      if(c=='0501' && k=='预警数量')
+                      {
+                          set_url("0501.预警数量",url);
+                          app.stateB={
+                              number: [v*1],
+                              formatter,
+                              style:{
+                                  fontSize: 48,
+                                  fill: '#FFCB18'
+                              }
+                          }
+                          console.log("0501.预警数量",v);
+                      }
+                      if(c=='0501' && k=='超期数量')
+                      {
+                          set_url("0501.超期数量",url);
+                          app.stateC={
+                              number: [v*1],
+                              formatter,
+                              style:{
+                                  fontSize: 48,
+                                  fill: '#FF6D31'
+                              }
+                              
+                          }
+                          console.log("0501.超期数量",v);
+                      }*/
+
+                  //待办完成质量
+                  /*if(c=='0502')
+                  {
+                      dbwcl_kv.push({
+                          name: k,
+                          value: v*1,
+                          url:url
+                      });
+                  }*/
+
+                  //相应k为空时候 需要补全，有待办的月份可能没有督办！
+                  if (c == "050301") {
+                    var m = k.replace('月', '');
+                    var m = m.replace(_this.CurYear, '');
+                    var m = m.replace('-', '') * 1;
+                    var lastDay = new Date(_this.CurYear, m, 0);
+                    if (m < 10) m = '0' + m;
+                    var m1 = lastDay.getMonth() + 1;
+                    if (m1 < 10) m1 = '0' + m1;
+                    var d1 = lastDay.getDate();
+                    if (d1 < 10) d1 = '0' + d1;
+                    url = getConfigUrlByCode(c) + '' + kid + '&bs.deptId=' + deptid + '&bs.bd=' + (_this.CurYear + '-' + m + '-01') + '&bs.ed=' + (_this.CurYear + '-' + m1 + '-' + d1);
+                    // console.log(url);
+                    set_dbyl_kv(1, k, v, url);
+                  }
+                  if (c == "050302") {
+                    var m = k.replace('月', '');
+                    var m = m.replace(_this.CurYear, '');
+                    var m = m.replace('-', '') * 1;
+                    var lastDay = new Date(_this.CurYear, m, 0);
+                    if (m < 10) m = '0' + m;
+                    var m1 = lastDay.getMonth() + 1;
+                    if (m1 < 10) m1 = '0' + m1;
+                    var d1 = lastDay.getDate();
+                    if (d1 < 10) d1 = '0' + d1;
+                    url = getConfigUrlByCode(c) + '' + kid + '&bs.deptId=' + deptid + '&bs.bd=' + (_this.CurYear + '-' + m + '-01') + '&bs.ed=' + (_this.CurYear + '-' + m1 + '-' + d1);
+                    set_dbyl_kv(2, k, v, url);
+                  }
+
+
+                  /* if(c=="050401")
+                      {
+                          k=getTypeById(k)
+                          K0504_1_k.push(k);
+                          K0504_1_v.push({
+                              value:v*1,
+                              url:url
+                          });
+                      }
+                      if(c=="050402")
+                      {
+                          k=getTypeById(k)
+                          if(K0504_2_k.length<5)
+                          {
+                              K0504_2_k.push(k);
+                              K0504_2_v.push({
+                                  value:v*1,
+                                  url:url
+                              });
+                          }
+                      }
+                      if(c=="050403")
+                      {
+                          k=getTypeById(k)
+                          K0504_3_k.push(k);
+                          K0504_3_v.push({
+                              value:v*1,
+                              url:url
+                          });
+                      }                        */
+                  if (c == '0505') {
+                    zzdb_k.push(k);
+                    zzdb_v.push({
+                      value: v * 1,
+                      url: url
+                    });
+                  }
+                  if (c == '0506') {
+
+                    //去字典数组里找
+                    k = getTypeById(k);
+                    swdb_k.push(k);
+                    //console.log(swdb_k);
+                    swdb_v.push({
+                      value: v * 1,
+                      url: url
+                    });
+                  }
+
+                }
+
+                // console.log("not sum")
+                // db.each("SELECT dept,c,name,k,kid,v as v from tbl order by c,k",
+                //     function (row) {
+                var stateA = 0;//正常数量
+                var stateB = 0;//预警数量
+                var stateC = 0;//超期数量
+                for (var i = 0; i < tbl.length; i++) {
+                  var row = tbl[i];
+                  var gid = row.dept;
+                  var c = row.c;
+                  var k = row.k;
+                  var v = row.v;
+                  var kid = row.kid;
+                  var name = row.name;
+                  var deptid = _this.CurDeptGuid;
+                  var sd = _this.CurYear + '-01-01';
+                  var ed = _this.CurYear + '-12-31';
+                  var url = getConfigUrlByCode(c) + '' + kid + '&bs.deptId=' + deptid + '&bs.bd=' + sd + '&bs.ed=' + ed;
+
+
+                  // if(c=='0502' )
+                  // {
+                  //     dbwcl_kv.push({
+                  //         name: k,
+                  //         value: v*1,
+                  //         url:url
+                  //     });
+                  // }
+
+                  if (c == "050401") {
+                    k = getTypeById(k)
+                    K0504_1_k.push(k);
+                    K0504_1_v.push({
+                      value: v * 1,
+                      url: url
+                    });
+                    stateA = stateA * 1 + v * 1;
+                  }
+                  if (c == "050402") {
+                    k = getTypeById(k)
+                    // if(K0504_2_k.length<5)
+                    // {
+                    K0504_2_k.push(k);
+                    K0504_2_v.push({
+                      value: v * 1,
+                      url: url
+                    });
+                    // }
+                    stateB = stateB * 1 + v * 1;
+                  }
+                  if (c == "050403") {
+                    k = getTypeById(k)
+                    K0504_3_k.push(k);
+                    K0504_3_v.push({
+                      value: v * 1,
+                      url: url
+                    });
+                    stateC = stateC * 1 + v * 1;
+                  }
+                  // if(c=='0501' && k=='正常数量' && deptid==gid)
+                  // {
+                  //     set_url("0501.正常数量",url);
+                  //     _this.stateA={
+                  //         number: [v*1],
+                  //         formatter,
+                  //         style:{
+                  //             fontSize: 48,
+                  //             fill: '#73B66B'
+                  //         }
+                  //     }
+                  //     // console.log("0501.正常数量",v);
+                  // }
+                  // if(c=='0501' && k=='预警数量' && deptid==gid)
+                  // {
+                  //     // console.log(row)
+                  //     set_url("0501.预警数量",url);
+                  //     _this.stateB={
+                  //         number: [v*1],
+                  //         formatter,
+                  //         style:{
+                  //             fontSize: 48,
+                  //             fill: '#FFCB18'
+                  //         }
+                  //     }
+                  //     // console.log("0501.预警数量",v);
+                  // }
+                  // if(c=='0501' && k=='超期数量' && deptid==gid)
+                  // {
+                  //     // console.log(row)
+                  //     set_url("0501.超期数量",url);
+                  //     _this.stateC={
+                  //         number: [v*1],
+                  //         formatter,
+                  //         style:{
+                  //             fontSize: 48,
+                  //             fill: '#FF6D31'
+                  //         }
+
+                  //     }
+                  //     // console.log("0501.超期数量",v);
+                  // }
+                };
+                //待办状态
+                _this.stateA = {
+                  number: [stateA],
+                  formatter,
+                  style: {
+                    fontSize: 48,
+                    fill: '#73B66B'
+                  }
+                }
+                _this.stateB = {
+                  number: [stateB],
+                  formatter,
+                  style: {
+                    fontSize: 48,
+                    fill: '#FFCB18'
+                  }
+                }
+                _this.stateC = {
+                  number: [stateC],
+                  formatter,
+                  style: {
+                    fontSize: 48,
+                    fill: '#FF6D31'
+                  }
+                }
+                //待办完成质量
+                var url0502 = getConfigUrlByCode('0502');
+
+                dbwcl_kv.push({
+                  name: '超期数量',
+                  value: stateC * 1,
+                  url: url0502 + '2&bs.deptId=' + _this.CurDeptGuid + '&bs.bd=' + _this.CurYear + '-01-01' + '&bs.ed=' + _this.CurYear + '-12-31',
+                });
+                dbwcl_kv.push({
+                  name: '预警数量',
+                  value: stateB * 1,
+                  url: url0502 + '1&bs.deptId=' + _this.CurDeptGuid + '&bs.bd=' + _this.CurYear + '-01-01' + '&bs.ed=' + _this.CurYear + '-12-31',
+                });
+                dbwcl_kv.push({
+                  name: '正常数量',
+                  value: stateA * 1,
+                  url: url0502 + '0&bs.deptId=' + _this.CurDeptGuid + '&bs.bd=' + _this.CurYear + '-01-01' + '&bs.ed=' + _this.CurYear + '-12-31',
+                });
+                _this.reloadChart();
+                setTimeout(function () {
+                  //app.reload_page();
+                }, 10000);
+              })
+              .catch(function (error) {
+              });
+          }
+
+
+        },
+        reset_data() {
+          // console.log("reset data...");
+          dbwcl_kv = [];
+          dbyl_k = [];
+          dbyl_v1 = [];
+          dbyl_v2 = [];
+          zzdb_k = [];
+          zzdb_v = [];
+          swdb_k = [];
+          swdb_v = [];
+          K0504_1_k = [];
+          K0504_1_v = [];
+          K0504_2_k = [];
+          K0504_2_v = [];
+          K0504_3_k = [];
+          K0504_3_v = [];
+          this.reloadChart();
+        },
+        make_packet(r) {
+          var guid = r.guid;
+          var dept = r.dept;
+          var y = r.y * 1;
+          var m = r.m * 1;
+          var c = r.c;
+          var name = r.name;
+          var k = r.k;
+          var v = r.v;
+          var kid = r.kid;
+        },
+
+      }
+    })
+  </script>
+</body>
+
+</html>

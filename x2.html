@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>智慧党建-党员分析</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+
+    <script src="./assets/javascript/browser.min.js"></script>
+    <script src="./assets/javascript/browser-polyfill.min.js"></script>
+
+    <script src="./assets/javascript/vue.js"></script>
+    <!--调试版-->
+    <script src="./assets/javascript/echarts.min.js"></script>
+    <!-- <script src="./assets/javascript/datav.min.vue.js"></script> -->
+    <script src="./assets/jp2/china.js"></script>
+    <script src="./assets/jp2/dlfb.js"></script>
+    <script src="./assets/jp2/nlfb.js"></script>
+    <script src="./assets/jp2/mzfb.js"></script>
+    <script src="./assets/jp2/xlfb.js"></script>
+    <script src="./assets/jp2/fzdy.js"></script>
+    <script src="./assets/jp2/dyzc.js"></script>
+    <script src="./assets/jp2/kndyzb.js"></script>
+    <script src="./assets/jp2/map.js"></script>
+    <script src="./assets/javascript/dlfb_1.js"></script>
+    <script src="./assets/javascript/jquery-3.6.0.min.js"></script>
+    <script src="./assets/layer/layer.js"></script>
+    <script src="./assets/jp2/axios.min.js"></script>
+    <script src="./assets/javascript/sql-wasm.js"></script>
+    <!-- <script src="../js/common/pubFunction.js"></script> -->
+    <script src="./assets/jp2/json.js"></script>
+    <script type="text/x-template" id="item-template">
+      <li>
+          <div @click="onClickTree(item)">{{ item.text }}</div>
+          <ul>
+              <tree-item 
+              class="item"
+              v-for="(child, index) in item.children"
+              :key="index"
+              :item="child"
+              ></tree-item>
+          </ul>
+      </li>
+    </script>
+    <link rel="stylesheet" href="./assets/css/application.css">
+    <style>
+        .map{
+            position:relative; 
+            height: 100%; 
+            z-index: 9;
+        }
+        .map4{ 
+            width: 200%; 
+            height:100%;  
+            position: relative; 
+            z-index: 5;
+        }
+        .map1,.map2,.map3{
+            width: 90%;
+            height: 90%;
+            left: 5%;
+            top: 5%;
+            position:absolute; 
+            opacity: .5;
+            
+        }
+
+        .map1{ 
+            z-index: 2;
+            animation: myfirst2 15s infinite linear;
+        }
+        .map2{ 
+            z-index: 3; 
+            opacity: 0.2; 
+            animation: myfirst 10s infinite linear;
+        }
+        .map3{ 
+            z-index: 1;
+        }
+        .map4{
+            width: 100%;
+        }
+
+        @keyframes myfirst2 {
+            from {transform: rotate(0deg);}
+            to {transform: rotate(359deg);}
+        }
+
+        @keyframes myfirst {
+            from {transform: rotate(0deg);}
+            to {transform: rotate(-359deg);}
+        }
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="top-header">
+            <div class="organ">
+                <div class="link border" v-on:click="openTree">{{CurDeptTitle}}</div>
+                <!-- <div style="display: inline-flex;justify-content: center; align-items: center; margin-left: 30px;">
+                    <img src="assets/images/zuo.png" alt="" style="width: 20px" @onclick="year_l()">
+                    <div class="link border" style="margin: 0 5px;">{{CurYear}}</div>
+                    <img src="assets/images/you.png" alt="" style="width: 20px" @onclick="year_r()">
+                </div> -->
+            </div>
+            <div class="center-title">党员分析</div>
+            <div class="data-update-time">
+                <div>
+                    <h3> 数据更新时间 </h3>
+                    <p>{{ UpTime }}</p>
+                </div>
+                <a href="index.html" class="link border">返回</a>
+            </div>
+        </div>
+        <div class="tree" v-if="treeIsOpen">
+            <ul>
+                <tree-item
+                    class="item"
+                    :item="treeData"
+                ></tree-item>
+            </ul>    
+        </div>
+        <div class="main" style="height: calc(70% - 105px);overflow: hidden;">
+            <div class="left" style="display: block !important;"> 
+                <!-- <dv-border-box-12> 
+                    <div class="data-title">党龄分布</div>
+                    <div ref="dlfb" class="echarts-wrap" style="width: 80%; margin: 0 auto;"></div>
+                </dv-border-box-12> -->
+                <div class="left" style=" padding: 0 10px 10px 10px; position: relative;width: 100%; height: 50%;">
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box"> 
+                        <div class="data-title">党龄分布</div>
+                        <div class="echarts-wrap" ref="dlfb"></div>
+                    </div>
+                </div>
+                <div class="left" style=" padding: 0 10px 10px 10px; position: relative;width: 100%; height: 50%;">
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box"> 
+                        <div class="data-title">年龄分布</div>
+                        <div class="echarts-wrap" ref="nlfb"></div>
+                    </div>
+                </div>
+                <!-- <dv-border-box-12> 
+                    <div class="data-title">年龄分布</div>
+                    <div ref="nlfb" class="echarts-wrap"></div>
+                </dv-border-box-12> -->
+            </div>
+            <div class="center"> 
+                <div style="width: 100%; height: 50%;">
+                    <!-- <dv-border-box-12 class="flex-item"  style="width:calc(50% - 2px); float:left;margin:0px 2px 0px 0px;">
+                        <div style="padding: 20px;" onclick="open_(get_url('0209'))">
+                            <dv-digital-flop 
+                                :config="stateA" 
+                                style="width:100%;height:70px;margin-bottom: 10px;margin-top: 20px;"
+                                :color="['red', 'green']" backgroundColor="blue" 
+                            >
+                            </dv-digital-flop>
+                            <div style="text-align: center;color: #FFF;font-size: 36px;">正式党员</div>
+                        </div>
+                    </dv-border-box-12> -->
+                    <div class="left" style="float: left; padding: 0 10px 10px 10px; position: relative;width: 50%;height: 100%;">
+                        <span class="top_left"></span>
+                        <span class="top_right"></span>
+                        <span class="bottom_left"></span>
+                        <span class="bottom_right"></span>
+                        <div class="border_box"  @click="open_(get_url('0209'))"> 
+                            <!-- <dv-digital-flop 
+                                :config="stateA" 
+                                style="width:100%;height:70px;margin-bottom: 10px;margin-top: 20px;"
+                                :color="['red', 'green']" backgroundColor="blue" 
+                            > -->
+                            <!-- </dv-digital-flop> -->
+                            <div class="data-title">正式党员</div>
+                            <div style="text-align: center;font-size:72px;color:#37E5FF;margin: 22px auto;">{{stateA.number[0]}}</div>
+
+                            
+                            <!-- <div class="echarts-wrap" ref="hdzl"></div> -->
+                        </div>
+                    </div>
+                    <div class="left" style="float: left; padding: 0 10px 10px 10px; position: relative;width: 50%;height: 100%;">
+                        <span class="top_left"></span>
+                        <span class="top_right"></span>
+                        <span class="bottom_left"></span>
+                        <span class="bottom_right"></span>
+                        <div class="border_box"  @click="open_(get_url('0210'))"> 
+                            <!-- <dv-digital-flop 
+                                :config="stateB" 
+                                style="width:100%;height:70px;margin-bottom: 10px;margin-top: 20px;"
+                                :color="['red', 'green']" backgroundColor="blue" 
+                            >
+                            </dv-digital-flop> -->
+                            
+                            <div class="data-title">预备党员</div>
+                            <div style="text-align: center;font-size:72px;color:#FF6D31;margin: 22px auto;">{{stateB.number[0]}}</div>
+
+                          
+                            <!-- <div class="echarts-wrap" ref="hdzl"></div> -->
+                        </div>
+                    </div>
+                    <!-- <dv-border-box-12 class="flex-item" style="width:calc(50% - 2px); float:left;margin:0px 0px 0px 2px;">
+                        <div style="padding: 20px;" onclick="open_(get_url('0210'))">
+                            <dv-digital-flop 
+                                :config="stateB" 
+                                style="width:100%;height:70px;margin-bottom: 10px;margin-top: 20px;"
+                                :color="['red', 'green']" backgroundColor="blue" 
+                            >
+                            </dv-digital-flop>
+                            <div style="text-align: center;color: #FFF;font-size: 36px;">预备党员</div>
+                        </div>
+                    </dv-border-box-12> -->
+                </div>
+                <div class="left" style=" padding: 0 10px 10px 10px; position: relative;width: 100%;height: 50%;">
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box"> 
+                        <div class="map">
+                            <div class="map1" style="background: url('assets/images/lbx.png') no-repeat center center;background-size: auto 100%;"></div>
+                            <div class="map2" style="background: url('assets/images/jt.png') no-repeat center center;background-size: auto 95%;"></div>
+                            <div class="map3" style="background: url('assets/images/map.png') no-repeat center center;background-size: auto 80%;"></div>
+                            
+                            <div class="map4" ref="map" style="width:100%;height:100%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- <dv-border-box-12> 
+                    <div class="map">
+                        <div class="map1" style="background: url('assets/images/lbx.png') no-repeat center center;background-size: auto 100%;"></div>
+                        <div class="map2" style="background: url('assets/images/jt.png') no-repeat center center;background-size: auto 95%;"></div>
+                        <div class="map3" style="background: url('assets/images/map.png') no-repeat center center;background-size: auto 80%;"></div>
+                        
+                        <div class="map4" ref="map" style="width:100%;height:200px;"></div>
+                    </div>
+                </dv-border-box-12> -->
+            </div>
+            <div class="right" style="display: block !important;"> 
+                <!-- <dv-border-box-12> 
+                    <div class="data-title">学历分布</div>
+                    <div class="echarts-wrap" ref="xlfb"></div>
+                </dv-border-box-12>
+                <dv-border-box-12> 
+                    <div class="data-title">民族分布</div>
+                    <div ref="mzfb" class="echarts-wrap"></div>
+                </dv-border-box-12> -->
+                <div class="left" style="padding: 0 10px 10px 10px; position: relative;width: 100%; height: 50%;">
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box"> 
+                        <div class="data-title">学历分布</div>
+                        <div class="echarts-wrap" ref="xlfb"></div>
+                    </div>
+                </div>
+                <div class="left" style="padding: 0 10px 10px 10px; position: relative;width: 100%; height: 50%;">
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box"> 
+                        <div class="data-title">民族分布</div>
+                        <div class="echarts-wrap" ref="mzfb"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main" style="height: 30%;">
+            <div class="col-1 flex" style="width: 70%;">
+                <div class="left" style="float: left; padding: 0 10px 10px 10px; position: relative;width: 100%; height: 95%;">
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box"> 
+                        <div style="height: 25%;">
+                            <div class="data-title" style="width: 33.3%; margin:15px 0px; display: block;float: left;">发展党员</div>
+                            <div class="data-title" style="width: 33.3%; margin:15px 0px; display: block;float: left;">党员职称</div>
+                            <div class="data-title" style="width: 33.3%; margin:15px 0px; display: block;float: left;">困难党员占比</div>
+                        </div>
+                        <div style="height: 100%;">
+                            <div class="echarts-wrap" ref="fzdy"  style="text-align: center;width: 33.3%;display: block;float: left;"></div>
+                            <div class="echarts-wrap" ref="dyzc" style="text-align: center;width: 33.3%;display: block;float: left;"></div>
+                            <div class="echarts-wrap" ref="kndyzb" style="text-align: center;width: 33.3%;display: block;float: left;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <dv-border-box-12>
+                    <div class="flex" style="height: 100%;">
+                        <div class="flex-item" style="text-align: center;">
+                            <div class="subtitle p20">发展党员</div>
+                            <div class="echarts-wrap" ref="fzdy"></div>
+                        </div>
+                        <div class="flex-item" style="text-align: center;">
+                            <div class="subtitle p20">党员职称</div>
+                            <div class="echarts-wrap" ref="dyzc"></div>
+                        </div>
+                        <div class="flex-item" style="text-align: center;">
+                            <div class="subtitle p20">困难党员占比</div>
+                            <div class="echarts-wrap" ref="kndyzb"></div>
+                        </div>
+                    </div> 
+                </dv-border-box-12> -->
+            </div>
+            <div class="right">
+
+
+                <div class="left" style="float: left; padding: 0 10px 10px 10px; position: relative;width: 100%; height: 95%;">
+                    <span class="top_left"></span>
+                    <span class="top_right"></span>
+                    <span class="bottom_left"></span>
+                    <span class="bottom_right"></span>
+                    <div class="border_box"> 
+                        
+                            <!-- <div class="echarts-wrap" ref="fzdy"  style="text-align: center;width: 32%;display: block;float: left;"></div>
+                            <div class="echarts-wrap" ref="dyzc" style="text-align: center;width: 33%;display: block;float: left;"></div>
+                            <div class="echarts-wrap" ref="kndyzb" style="text-align: center;width: 35%;display: block;float: left;"></div> -->
+                        <div style="height: 25%;">
+                            <div class="data-title" style="margin: 15px 2px !important;width: 31%;display: block;float: left;">党员奖励</div>
+                            <div class="data-title" style="margin: 15px 2px !important;width: 34%;display: block;float: left;">组织关系转接</div>
+                            <div class="data-title" style="margin: 15px 2px !important;width: 32%;display: block;float: left;">{{(!CurZZSRMonth || CurZZSRMonth=='')?'本月':(CurZZSRMonth+'月')}}政治生日</div>
+                        </div>
+                        <div style="height: 75%;margin-top: 3%;">
+                            <div class="left" @click="open_(get_url('0211'),'党员奖励页面')" style="float: left;height: 80%; justify-content: center; align-items: center; flex-direction: column;">
+                                <img src="./assets/images/p2_jl.svg" alt="" style="width: 30%;height: 100%;">
+                                <span style="font-size: 48px; color: #FFF;">{{K0211==''?0:K0211}}</span>
+                            </div>
+                            <div class="center" @click="open_(get_url('0212'),'组织关系转接页面')" style="float: left;height: 80%; justify-content: center; align-items: center; flex-direction: column;">
+                                <img src="./assets/images/p2_zj.svg" alt="" style="width: 30%;height: 100%;">
+                                <span style="font-size: 48px; color: #FFF;">{{K0212==''?0:K0212}}</span>
+                            </div>
+                            <div class="right" style="float: left;height: 80%; justify-content: center; position: relative; align-items: center; flex-direction: column;">
+                                <div class="prev" @click="c_zzsr(-1)" style="cursor: pointer;"></div>
+                                <div class="next" @click="c_zzsr(1)" style="cursor: pointer;"></div>
+                                <img src="./assets/images/p2_sr.svg" alt="" style="width: 30%;height: 100%;" onclick="open_(get_url('0213'),'政治生日页面')">
+                                <span style="font-size: 48px; color: #FFF;"  @click="open_()">{{K0213==''?0:K0213}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <dv-border-box-12>
+                    <div class="flex" style="text-align: center; height: 100%;">
+                        <div class="flex-item">
+                            <div class="subtitle p20">&nbsp;&nbsp;&nbsp;&nbsp;党员奖励&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                            <div class="flex" onclick="open_(get_url('0211'),'党员奖励页面')" style="height: 80%; justify-content: center; align-items: center; flex-direction: column;">
+                                <img src="./assets/images/p2_jl.svg" alt="" style="width: 30%;">
+                                <span style="font-size: 48px; color: #FFF;">{{K0211==''?0:K0211}}</span>
+                            </div>
+                        </div>
+                        <div class="flex-item">
+                            <div class="subtitle p20">组织关系转接</div>
+                            <div class="flex" onclick="open_(get_url('0212'),'组织关系转接页面')" style="height: 80%; justify-content: center; align-items: center; flex-direction: column;">
+                                <img src="./assets/images/p2_zj.svg" alt="" style="width: 30%;">
+                                <span style="font-size: 48px; color: #FFF;">{{K0212==''?0:K0212}}</span>
+                            </div>
+                        </div>
+                        <div class="flex-item">
+                            <div class="subtitle p20">{{(!CurZZSRMonth || CurZZSRMonth=='')?'本月':(CurZZSRMonth+'月')}}政治生日</div>
+                            <div class="flex" style="height: 80%; justify-content: center; position: relative; align-items: center; flex-direction: column;">
+                                <div class="prev" @onclick="c_zzsr(-1)" style="cursor: pointer;"></div>
+                                <div class="next" @onclick="c_zzsr(1)" style="cursor: pointer;"></div>
+                                <img src="./assets/images/p2_sr.svg" alt="" style="width: 30%;" onclick="open_(get_url('0213'),'政治生日页面')">
+                                <span style="font-size: 48px; color: #FFF;"  onclick="open_()">{{K0213==''?0:K0213}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </dv-border-box-12> -->
+            </div>
+        </div>
+    </div>
+    <script type="text/babel">
+function rq(variable)
+{
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){return pair[1];}
+    }
+    return "";
+}
+var DEFAULT_STR_TMP=(rq("t")=="")?"":"TMP";  
+var strMin = String.fromCharCode(8);      
+var DEFAULT_PAGE='02';
+
+var dlfb_k=[];
+var dlfb_v=[];
+var nlfb_k=[];
+var nlfb_v=[];
+var mzfb_kv=[];
+var mzfb_k=[];
+var jgfb_kv=[];
+var xlfb_kv=[];
+var xlfb_k=[];
+var fzdy_kv=[];
+var fzdy_k=[];
+var dyzc_kv=[];
+var dyzc_k=[];
+var kndy_kv=[];
+var kndy_k=[];
+var otherMzCount=0;
+var saasInfo = '';
+
+//按Code得到下钻URL
+var lstConfig=[];
+function getConfigUrlByCode(c)
+{
+    for(i=0;i<lstConfig.length;i++)
+    {
+        if(lstConfig[i].c==c)
+        {
+            var u=lstConfig[i].url
+            if(u=='')u="/not_configed";
+            return u;
+        }
+    }
+    return "/not_configed";
+}
+
+//设置单一条目的下钻URL
+var lstUrl=[];
+function set_url(k,v)
+{
+    for(i=0;i<lstUrl.length;i++)
+    {
+        if(lstUrl[i].k==k)
+        {
+            lstUrl[i].v=v;
+            return;
+        }
+    }
+    lstUrl.push({k:k,v:v});
+}
+function get_url(k)
+{
+    for(i=0;i<lstUrl.length;i++)
+    {
+        if(lstUrl[i].k==k)
+        {
+            return lstUrl[i].v;
+        }
+    }
+    return "";
+}
+
+
+
+
+Vue.component("tree-item", {
+    template: "#item-template",
+    props: {
+        item: Object
+    },
+    methods: {
+        onClickTree(x){
+            // console.log(x)
+            app.treeIsOpen=false;
+            app.CurDeptTitle=x.text;
+            app.CurDeptGuid=x.id;
+            app.reload_page();
+        }
+    }
+});
+
+
+
+//弹出下钻窗口
+function open_(u, t)
+{
+    // console.log(u)
+    if(u != null && u != '') {
+        top.openWindowNew({
+            title: t,
+            maxmin: true,
+            area: ['85%', '620px'],
+            content: u
+        }, this, "back");
+    }
+}
+
+var db=null;
+var charts=[];
+for(var i=0;i<20;i++)
+{
+    charts.push(null);
+}
+
+
+//格式化，翻拍器，那玩意的数值如果是0，不显示，设为-1，在这里转一下
+function formatter(number) {
+    if(number<0)return "0";
+    return number;
+}
+        var app = new Vue({
+        el: '#app',
+        data: {
+            CurDeptTitle:'',//当前组织名称
+            CurDeptGuid:'',//当前组织GUID
+            CurYear:new Date().getFullYear(),//当前年
+            ArrYears:[],//年份数组
+            PosYear:0,//年的指针
+            UpTime:'',
+            CurZZSRMonth:(new Date().getMonth()+1),
+            K0211:'',
+            K0212:'',
+            K0213:'',
+            stateA: {
+                number: [0],
+                formatter,
+                style:{
+                    fontSize: 72,
+                    fill: '#37E5FF'
+                }
+            },
+            stateB: {
+                number: [0],
+                formatter,
+                style:{
+                    fontSize: 72,
+                    fill: '#FF6D31'
+                }
+            },
+            treeIsOpen: false,
+            openUrlFlag: true,
+            treeData: {},
+            url_t: false,
+            url_j: false,
+            tbl: [],
+            month_zzsr: 1,
+        },
+        created(){
+            var m=new Date().getMonth()+1;
+            if(m<10)m='0'+m;
+            var d=new Date().getDate() - 1;
+            if(d<10)d='0'+d;
+            var dtToday=(new Date().getFullYear())+'-'+m+'-'+d;
+            this.UpTime = dtToday + ' 16:02:59'
+            
+            this.url_t = this.getQueryVariable("t");
+            this.url_j = this.getQueryVariable("j");
+        },
+        mounted() { 
+            // initSqlJs({
+            //     locateFile: file => `./assets/javascript/${file}`
+            // }).then(
+            //     function(SQL){
+            //         db = new SQL.Database();
+            //         db.run("CREATE TABLE cfg (c,name,url,tim);");
+            //         db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+            //         _this.fetch_party_dept();
+            //     }
+            // );     
+            // this.$nextTick(() => {
+                
+            // })    
+            
+            this.fetch_party_dept();
+            // this.reload_page();
+        },
+        methods: {
+            get_url(k)
+            {
+                for(i=0;i<lstUrl.length;i++)
+                {
+                    if(lstUrl[i].k==k)
+                    {
+                        return lstUrl[i].v;
+                    }
+                }
+                return "";
+            },
+            open_(u, t)
+            {
+                // console.log(u)
+                if(u != null && u != '') {
+                    top.openWindowNew({
+                        title: t,
+                        maxmin: true,
+                        area: ['85%', '620px'],
+                        content: u
+                    }, this, "back");
+                }
+            },
+            //政治生日，切换 
+            c_zzsr(i)
+            {
+                this.month_zzsr=this.month_zzsr*1+i*1;
+                if(this.month_zzsr<1)this.month_zzsr=1;
+                if(this.month_zzsr>12)this.month_zzsr=12;
+                this.search_zzsr(this.month_zzsr);
+            },
+            year_l()
+            {
+                this.PosYear--;
+                if(this.PosYear<0)this.PosYear=0;
+                if(this.PosYear>this.ArrYears.length-1)this.PosYear=this.ArrYears.length-1;
+                this.CurYear=this.ArrYears[this.PosYear];
+                this.reload_page();
+            },
+            year_r()
+            {
+                this.PosYear++;
+                if(this.PosYear<0)this.PosYear=0;
+                if(this.PosYear>this.ArrYears.length-1)this.PosYear=this.ArrYears.length-1;
+                this.CurYear=this.ArrYears[this.PosYear];
+                this.reload_page();
+            },
+            getQueryVariable(variable)
+            { 
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                for (var i=0;i<vars.length;i++) {
+                        var pair = vars[i].split("=");
+                        if(pair[0] == variable){return pair[1];}
+                }
+                return(false);
+            },
+            openTree(){
+                this.treeIsOpen = !this.treeIsOpen
+            },
+            reloadChart(){
+                var idx=0;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.dlfb)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"党员基础信息");
+                    });
+                }
+                charts[idx].setOption(getP2_dlfb(dlfb_k,dlfb_v))
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.nlfb)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"党员基础信息");
+                    });
+                }
+                // console.log("开发框架的JFJF"+nlfb_k,nlfb_v)
+                charts[idx].setOption(getp2_nlfb(nlfb_k,nlfb_v))
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.mzfb)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"党员基础信息");
+                    });
+                }
+                charts[idx].setOption(getp2_mzfb(mzfb_kv,mzfb_k))
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.xlfb)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"党员基础信息");
+                    });
+                }
+                charts[idx].setOption(getp2_xlfb(xlfb_kv,xlfb_k))
+
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.fzdy)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"党员基础信息");
+                    });
+                }
+                charts[idx].setOption(getp2_fzdy(fzdy_kv,fzdy_k))
+
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.dyzc)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"党员基础信息");
+                    });
+                }
+                charts[idx].setOption(getp2_dyzc(dyzc_kv,dyzc_k))
+
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.kndyzb)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"困难党员页面");
+                    });
+                }
+                charts[idx].setOption(getp2_kndy(kndy_kv,kndy_k))
+
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.map)
+                    charts[idx].on('click',function(p){
+                        var url=p.data.url;
+                        open_(url,"党员基础信息");
+                    });
+                }
+                charts[idx].setOption(getp2_map(jgfb_kv, saasInfo))
+
+            },
+            init() {
+
+            },
+            fetch_party_dept(){
+                let _this = this;
+                if(this.url_j){
+                    var j=jp2Json1
+                    var partys=j.obj;
+                    this.CurDeptTitle=partys.text;               
+                    this.CurDeptGuid=partys.id;               
+                    this.treeData=partys;               
+                    this.reload_page(); 
+                }else{
+                    axios.get('../dj_web/bigscreen/bigscreenAPIAction!partyAdministrativeTree.action?partyAdministrative.boolPublicValue=false&strIsDiff=2&numIsLose=1', {
+                        params: {
+                            token: 'token',
+                        }
+                    })
+                    .then(function (ret) {
+                        var data=ret.data;
+                        var j=JSON.parse(data);
+                        var partys=j.obj;
+                        _this.CurDeptTitle=partys.children[0].text;               
+                        _this.CurDeptGuid=partys.children[0].id;               
+                        _this.treeData=partys;               
+                        _this.reload_page(); 
+                    })
+                    .catch(function (error) {
+                    });
+                }
+                
+            },
+            search_zzsr(){
+                // console.log("找"+this.month_zzsr+"月的政治生日...");
+                this.K0213=0;
+                var row = [];
+                for (var i=0; i<this.tbl.length; i++) {
+                    if (this.tbl[i].c == '0213' && this.tbl[i].m == this.month_zzsr) {
+                        row.push(this.tbl[i]);
+                    }
+                }
+                // db.each("select * from tbl where c='0213' and m='"+month_zzsr+"' ", 
+                //     function (row){
+                   
+                    for(var i=0;i<row.length;i++) {
+                        var url=getConfigUrlByCode(row[i].c);
+                        url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + this.month_zzsr + encodeURI(strMin) + "politicalBirthday" + encodeURI(strMin) + this.CurDeptGuid;
+                        set_url("0213",url);
+                        this.K0213=row[i].v*1;
+                       // this.CurZZSRMonth=this.month_zzsr;                    
+                    }
+                        this.CurZZSRMonth=this.month_zzsr; 
+
+                // );
+            },
+            reload_page(){
+                // console.log("加载本屏数据源...");
+                //app.CurDeptGuid='ee63ce9e4cc342f591e9ce6741d3f124';
+                var j=undefined;
+                //年份
+                var years=undefined;
+                var setupDatas=undefined;
+                var staticDatas=undefined;
+                // console.log("组织GUID="+this.CurDeptGuid);
+              
+                let _this = this;
+               
+                if(this.url_j){
+                    j=jp2Json2
+                    //年份
+                    years=j.objList.years;
+                    setupDatas=j.objList.setupDatas;
+                    staticDatas=j.objList.staticDatas;
+                    otherMzCount=0;
+                    // console.log(years)
+                }else{
+                    axios.get('../dj_web/bigscreen/bigscreenAPIAction!getStaticDataByDept.action', {
+                        params: {
+                            "searchData.strDept":this.CurDeptGuid,
+                            "searchData.strP":DEFAULT_PAGE,
+                            "searchData.strYear":this.CurYear,
+                            "searchData.strTmp":DEFAULT_STR_TMP,//TMP
+                        }
+                    })
+                    .then(function (ret) {
+                        // console.log("配置信息")
+                        var data=ret.data;
+                        j=JSON.parse(data)
+                        //年份
+                        years=j.objList.years;
+                        setupDatas=j.objList.setupDatas;
+                        staticDatas=j.objList.staticDatas;
+                        otherMzCount=0;
+                        // console.log(years)
+                        var strSaasInfo = j.objList.saasInfo;
+                        
+                    //转换年数组，变成数字型
+                    _this.ArrYears=[];
+                    for(var i=0;i<years.length;i++){
+                        _this.ArrYears.push(years[i]*1);
+                    }
+                    // years.forEach((x,i)=>{
+                    //     //console.log(x);
+                    //     app.ArrYears.push(x*1);
+                    // });
+
+                    //从小到大排序
+                    var arrYears = years.sort(function(a,b){
+                        return a-b;
+                    })
+                    // app.ArrYears.sort();
+
+                    //取当前年，设置指针
+                    _this.ArrYears = arrYears;
+                    for(var i=0;i>_this.ArrYears.length;i++){
+                        if(_this.ArrYears[i]==_this.CurYear)
+                        {
+                            _this.PosYear=i;
+                        }
+                    }
+                    // app.ArrYears.forEach((x,i)=>{
+                    //     if(x==app.CurYear)
+                    //     {
+                    //         app.PosYear=i;
+                    //     }
+                    // });
+                    
+                    lstConfig=[];
+                    // db.run("drop TABLE cfg ");
+                    // db.run("CREATE TABLE cfg (c,name,url,tim);");
+                    // setupDatas.forEach((x,i)=>{
+                        //console.log(x)
+                    for(var i=0;i<setupDatas.length;i++){
+                        var x = setupDatas[i];
+
+                        lstConfig.push({
+                            "c":x.strStatCode,
+                            "name":x.strStatName,
+                            "url":x.strStatUrl,
+                            "tim":x.strFormattedTime,
+                        });
+
+
+                        // db.exec("insert into cfg (c,name,url,tim) values ($c,$name,$url,$tim)",{
+                        //     "$c":x.strStatCode,
+                        //     "$name":x.strStatName,
+                        //     "$url":x.strStatUrl,
+                        //     "$tim":x.strFormattedTime,
+                        // })
+                    }
+                    // );
+
+                    for(var i=0;i<lstConfig.length;i++){
+                        if(_this.UpTime=='' && lstConfig[i].tim!='')
+                        {
+                            if(_this.url_j){
+                                var time=(new Date).getTime()-24*60*60*1000;
+                                var yesterday=new Date(time);
+                                var month=yesterday.getMonth();
+                                var day=yesterday.getDate();
+                                yesterday=yesterday.getFullYear() + "年" + 
+                                (yesterday.getMonth()> 9 ? (yesterday.getMonth() + 1) : "0" + (yesterday.getMonth() + 1)) + "月" +
+                                (yesterday.getDate()> 9 ? (yesterday.getDate()) : "0" + (yesterday.getDate())) + "日";
+                                _this.UpTime=yesterday + ' 23:20:46';
+                            }else{
+                                _this.UpTime=row.tim;
+                            }
+                        }
+                    }
+
+                    // db.each("SELECT * from cfg", 
+                    //     function (row){
+                    //         console.log(row)
+                    //         if(app.UpTime=='' && row.tim!='')
+                    //         {
+                    //             if(app.url_j){
+                    //                 var time=(new Date).getTime()-24*60*60*1000;
+                    //                 var yesterday=new Date(time);
+                    //                 var month=yesterday.getMonth();
+                    //                 var day=yesterday.getDate();
+                    //                 yesterday=yesterday.getFullYear() + "年" + 
+                    //                 (yesterday.getMonth()> 9 ? (yesterday.getMonth() + 1) : "0" + (yesterday.getMonth() + 1)) + "月" +
+                    //                 (yesterday.getDate()> 9 ? (yesterday.getDate()) : "0" + (yesterday.getDate())) + "日";
+                    //                 app.UpTime=yesterday + ' 23:20:46';
+                    //             }else{
+                    //                 app.UpTime=row.tim;
+                    //             }
+                    //         }
+                    //     }
+                    // );
+
+                    //本屏数据
+                    _this.tbl = [];
+                    for (var i=0;i<staticDatas.length; i++) {
+                       
+                        
+                      
+                        var sameFlag = true;
+                        for(var j=0;j<_this.tbl.length; j++) {
+                            if (_this.tbl[j].guid == staticDatas[i].strGuid) {
+                                sameFlag = false;
+                                break;
+                            }
+                           
+                            // 正式党员
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0209' && _this.tbl[j].k == staticDatas[i].strStatKey
+                                && staticDatas[i].strStatKey == '正式党员') {
+           
+                                  _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                  // _this.tbl[j].v = staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+
+                            // 预备党员
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0209' && _this.tbl[j].k == staticDatas[i].strStatKey
+                                && staticDatas[i].strStatKey == '预备党员') {
+   
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                   // _this.tbl[j].v = staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            //党龄
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0201' && _this.tbl[j].k == staticDatas[i].strStatKey) {
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            //年龄分布
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0202' && _this.tbl[j].k == staticDatas[i].strStatKey) {
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            
+                            //发展党员
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0203' && _this.tbl[j].k == staticDatas[i].strStatKey) {
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            //民族
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0206' && _this.tbl[j].k == staticDatas[i].strStatKey) {
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                               //职称
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0204' && _this.tbl[j].k == staticDatas[i].strStatKey) {
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            // 党员奖励
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0211') {
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            // 困难党员
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0208' && _this.tbl[j].k == staticDatas[i].strStatKey) {
+                                    _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                          
+                                console.log(staticDatas[i])
+                            
+                            // 组织关系转接 
+                            if (_this.tbl[j].guid != staticDatas[i].strGuid && _this.tbl[j].c == staticDatas[i].strStatCode 
+                                && staticDatas[i].strStatCode == '0212') {
+                                _this.tbl[j].v = _this.tbl[j].v*1 + staticDatas[i].strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            
+                        }
+                        if (sameFlag) {
+                            _this.tbl.push({                   
+                                "guid": staticDatas[i].strGuid,
+                                "y": staticDatas[i].strStatYear,
+                                "m": staticDatas[i].strStatMonth,
+                                "dept": staticDatas[i].strStatDept,
+                                "c": staticDatas[i].strStatCode,
+                                "name": staticDatas[i].strStatName,
+                                "k": staticDatas[i].strStatKey,
+                                "v": staticDatas[i].strStatValue,
+                                "kid": staticDatas[i].strStatKId})
+                        }
+                            
+                    }
+              
+                  
+                    // db.exec("drop table tbl ");
+                    // db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+                    // staticDatas.forEach((x,i)=>{
+                    //     //console.log(x);
+                    //     db.exec("insert into tbl (guid,y,m,dept,c,name,k,v,kid) values ($guid,$y,$m,$dept,$c,$name,$k,$v,$kid)",{
+                    //         "$guid":x.strGuid,
+                    //         "$y":x.strStatYear,
+                    //         "$m":x.strStatMonth,
+                    //         "$dept":x.strStatDept,
+                    //         "$c":x.strStatCode,
+                    //         "$name":x.strStatName,
+                    //         "$k":x.strStatKey,
+                    //         "$v":x.strStatValue,
+                    //         "$kid":x.strStatKId,
+                    //     })
+                    // });
+                    _this.reset_data();
+                    
+                    var tbls = JSON.parse(JSON.stringify(_this.tbl))
+
+                    for(var i=0;i<tbls.length;i++){
+                        _this.make_packet(tbls[i]);
+                    }
+                    // db.each("SELECT * from tbl", 
+                    //     function (row){
+                    //         //console.log(row)
+                    //         app.make_packet(row);
+                    //     }
+                    // );
+
+                    var tbls = JSON.parse(JSON.stringify(_this.tbl))
+                  
+              
+    
+                    var maxm = 0;
+                    for (var i=0; i<tbls.length;i++) {
+                        if (tbls[i].c = '0112' && (tbls[i].m - maxm > 0)) {
+                            maxm = tbls[i].m;
+                        }
+                        
+                    }
+                    
+                    // db.each("select max(m) as m from tbl where c='0213' ", 
+                    //     function (row){
+                    //         console.log(row) 
+                    //         //if(row.m)
+                    //         {           
+                        _this.CurZZSRMonth=maxm;
+                        _this.month_zzsr=_this.CurZZSRMonth;
+                            // }
+                           
+                            _this.search_zzsr();
+                          
+                    //     }
+                    // );
+                   
+
+                    // db.each("SELECT c,k,name,sum(v) as v,kid from tbl group by c,name,k order by c,v*1 desc",
+                    //     function (row){
+                        _this.K0211=[];
+                        _this.K0212=[];
+                        var tbls = JSON.parse(JSON.stringify(_this.tbl))
+                        var boolStateA = true;
+                        var boolStateB = true;
+                        for (var i=0; i<tbls.length;i++) {
+                            var row = tbls[i];
+                            var c=row.c;
+                            var k=row.k;
+                            var v=row.v;
+                            var name=row.name;
+                            var kid=row.kid;
+                            var name=row.name;
+                            var deptid=_this.CurDeptGuid;
+                            var sd=_this.CurYear+'-01-01';
+                            var ed=_this.CurYear+'-12-31';
+                            //var url=getConfigUrlByCode(c)+''+kid+'&bs.deptId='+deptid+'&bs.bd='+sd+'&bs.ed='+ed;
+                            var url=getConfigUrlByCode(c);
+                            
+                            if(c=='0209' && k=='正式党员')
+                            {
+                                boolStateA = false;
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "personType" + encodeURI(strMin) + deptid;
+                                set_url('0209',url);
+                                _this.stateA={
+                                    number: [v*1],
+                                    style:{
+                                        fontSize: 72,
+                                        fill: '#37E5FF'
+                                    }
+                                }
+                            }
+
+                            if(c=='0203' && k=='预备党员')
+                            {
+                                
+                                boolStateB = false;
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "personType" + encodeURI(strMin) + deptid;
+                                set_url('0203',url);
+                                _this.stateB={
+                                    number: [v*1],
+                                    style:{
+                                        fontSize: 72,
+                                        fill: '#37E5FF'
+                                    }
+                                }
+                            }
+
+                            //党员奖励
+                            if(c=='0211')
+                            {
+                                url += "&strMenuParameter=partybrain;" + kid + ";" +_this.CurYear+";"+deptid;
+                                set_url('0211',url);
+                                _this.K0211=v;
+                            }
+                            //组织关系转接
+                            if(c=='0212')
+                            {
+                                url += "&strMenuParameter=partybrain;"+_this.CurYear+";"+deptid;
+                                set_url('0212',url);
+                                _this.K0212=v;
+                            }
+
+
+                            //党龄分布
+                            if(c=='0201')
+                            {
+                                if (k.indexOf("年")) {
+                                    k = k.replace("年", "");
+                                }
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + encodeURI(k)  + encodeURI(strMin) + "partyStanding" + encodeURI(strMin) + deptid;
+                              
+                                var dlfbFlag = true;
+                                // for(var d=0;d<dlfb_k.length;d++) {
+                                //     '5年以下' '5-10年'  '10-15年'  '15-20年''20年以上' 
+                                //     if (dlfb_k[d] == k) {
+                                //         dlfbFlag = false;
+                                //         break;
+                                //     }
+                                // }
+                                if (dlfbFlag) {
+                                    dlfb_k[kid]= k;
+                                    dlfb_v[kid]= {value:v*1,url:url};
+                                }
+                            }
+
+                            //年龄
+                            if(c=='0202')
+                            {
+                              
+                                if (kid.indexOf("及以上")) {
+                                    kid = kid.replace("及以上", "");
+                                }
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "age" + encodeURI(strMin) + deptid;
+                               
+                                var nlfnIndex;
+                                switch(k) {
+                                    case '18-29':
+                                    nlfnIndex = 3
+                                        break;
+                                    case '30-39':
+                                    nlfnIndex = 2
+                                        break;
+                                    case '40-49':
+                                    nlfnIndex = 1
+                                        break;
+                                    case '50及以上':
+                                    nlfnIndex = 0
+                                         break;
+                                } 
+                              
+                                if(nlfnIndex >= 0){
+                                    nlfb_k[nlfnIndex] = k;
+                                    nlfb_v[nlfnIndex] = {value:v*1,url:url};
+                                }
+                               
+                              
+                            }
+
+                            //发展党员
+                            if(c=='0203')
+                            {
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "personType" + encodeURI(strMin) + deptid;
+                                
+                                var fzdyFlag = true;
+                                for(var n=0;n<fzdy_k.length;n++) {
+                                    if (fzdy_k[n] == k) {
+                                        fzdyFlag = false;
+                                        break;
+                                    }
+                                }
+                                if (fzdyFlag) {
+                                    fzdy_k.push(k);
+                                    fzdy_kv.push({
+                                        name: k,
+                                        value: v*1,
+                                        url:url
+                                    });
+                                }
+                            }
+
+
+                            //党员职称
+                            if(c=='0204')
+                            {
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "jobTitle" + encodeURI(strMin) + deptid;
+                                var  dyzcFlag = true;
+                                for(var d=0;d<dyzc_k.length;d++) {
+                                    if (dyzc_k[d] == k) {
+                                        dyzcFlag = false;
+                                        break;
+                                    }
+                                }
+                                if (dyzcFlag) {
+                                    dyzc_k.push(k);
+                                    dyzc_kv.push({
+                                        name: k,
+                                        value: v*1,
+                                        url:url
+                                    });
+                                 
+                                }
+                            }  
+
+                            //困难党员
+                            if(c=='0208')
+                            {
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "difficulty" + encodeURI(strMin) + deptid;
+                                
+                                var  kndyFlag = true;
+                                for(var d=0;d<kndy_k.length;d++) {
+                                    if (kndy_k[d] == k) {
+                                        kndyFlag = false;
+                                        break;
+                                    }
+                                }
+                                if (kndyFlag) {
+                                    kndy_k.push(k);
+                                    kndy_kv.push({
+                                        name: k,
+                                        value: v*1,
+                                        url:url
+                                    });
+                                }                                
+                            }  
+
+                            //学历分布
+                            if(c=='0205')
+                            {
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "education" + encodeURI(strMin) + deptid;
+
+                                var  xlfbFlag = true;
+                                let index = 0;
+                                for(var d=0;d<xlfb_k.length;d++) {
+                                    if (xlfb_k[d] == k) {
+                                        xlfbFlag = false;
+                                        index = d;
+                                        break;
+                                    }
+                                }
+                                if (xlfbFlag) {
+                                    xlfb_k.push(k);
+                                    xlfb_kv.push({
+                                        name: k,
+                                        value: v*1,
+                                        url:url
+                                    });
+                                }else {
+                                    xlfb_kv[index] = {
+                                        name: k,
+                                        value: xlfb_kv[index].value + (v*1),
+                                        url:url
+                                    }
+                                }
+                            }
+
+                            //民族
+                            if(c=='0206')
+                            {
+                               
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "notion" + encodeURI(strMin) + deptid;
+                                if(mzfb_kv.length<5) {
+                                    mzfb_k.push(k);
+                                    mzfb_kv.push({
+                                        name: k,
+                                        value: v * 1,
+                                        url: url
+                                    });
+                                }else{
+                                    otherMzCount += v * 1;
+                                }
+                            }
+                            //籍贯分布
+                            if(c=='0207')
+                            {
+                                url += "&strMenuParameter=partybrain" + encodeURI(strMin) + "3" + encodeURI(strMin) + "=" + encodeURI(strMin) + kid + encodeURI(strMin) + "nativePlace" + encodeURI(strMin) + deptid;
+                                jgfb_kv.push({
+                                    name: k,
+                                    value: v*1,
+                                    url:url
+                                });
+                            }   
+                        };
+                        //若没有数据清空党员数量
+                        if(boolStateA){
+                            _this.stateA={
+                                    number: [0],
+                                    style:{
+                                        fontSize: 72,
+                                        fill: '#37E5FF'
+                                    }
+                                }
+                        };
+                        if(boolStateB){
+                            _this.stateB={
+                                    number: [0],
+                                    style:{
+                                        fontSize: 72,
+                                        fill: '#37E5FF'
+                                    }
+                                }
+                        };
+                        //去掉党龄中的空值
+                        for(var i = 0 ;i<dlfb_k.length;i++)  
+                        {  
+                            if(dlfb_k[i] == " " || dlfb_k[i] == null || typeof(dlfb_k[i]) == "undefined")  
+                            {  
+                                dlfb_k.splice(i,1);  
+                                dlfb_v.splice(i,1);  
+                                    i= i-1;  
+                            }  
+                        }  
+                        //去掉年龄分布中的空值
+                        for(var i = 0 ;i<nlfb_k.length;i++)  
+                        {  
+                            if(nlfb_k[i] == " " || nlfb_k[i] == null || typeof(nlfb_k[i]) == "undefined")  
+                            {  
+                                nlfb_k.splice(i,1);  
+                                nlfb_v.splice(i,1);  
+                                    i= i-1;  
+                            }  
+                        }  
+                    // );
+                    if(otherMzCount != 0){
+                        mzfb_k.push("其他");
+                        mzfb_kv.push({
+                            name: "其他",
+                            value: otherMzCount,
+                            url:'这咋办！没有url'
+                        });
+                    }
+                    
+                    // 党组织位置
+                    saasInfo = strSaasInfo;
+                   // console.log("saasInfo   " + saasInfo)
+                    _this.reloadChart();
+                    // setTimeout(function(){
+                    //     this.reload_page();
+                    // },10000);
+                    })
+                    .catch(function (error) {
+                    });
+                }
+            },
+            reset_data(){
+                //console.log("reset data...");
+               
+                dlfb_k=[];
+                dlfb_v=[];
+                nlfb_k=[];
+                nlfb_v=[];
+                mzfb_kv=[];
+                mzfb_k=[];
+                jgfb_kv=[];
+                xlfb_kv=[];
+                xlfb_k=[];
+                fzdy_kv=[];
+                fzdy_k=[];
+                dyzc_kv=[];
+                dyzc_k=[];
+                kndy_kv=[];
+                kndy_k=[];
+                saasInfo = '';
+                this.reloadChart();
+            },
+            make_packet(r){
+                var guid=r.guid;
+                var dept=r.dept;
+                var y=r.y*1;
+                var m=r.m*1;
+                var c=r.c;
+                var name=r.name;
+                var k=r.k;
+                var v=r.v;
+                var kid=r.kid;        
+
+            },
+
+        }
+    })
+    </script>
+</body>
+</html>

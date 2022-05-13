@@ -1,0 +1,912 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>智慧党建-组织生活</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <!-- ---------------------------引入js文件 s -->
+    <script src="./assets/javascript/browser.min.js"></script>
+    <script src="./assets/javascript/browser-polyfill.min.js"></script>
+    <!-- ---------------------------引入js文件 e -->
+
+    <script src="./assets/javascript/vue.js"></script>
+    <!--调试版-->
+    <script src="./assets/javascript/echarts.min.js"></script>
+    <script src="./assets/jp3/hdzl.js"></script>
+    <script src="./assets/jp3/zzhdl.js"></script>
+    <script src="./assets/jp3/lxhdl.js"></script>
+    <script src="./assets/jp3/hdcql.js"></script>
+    <script src="./assets/jp3/jhzl.js"></script>
+    <script src="./assets/jp3/jhwcqk.js"></script>
+    <script src="./assets/javascript/jquery-3.6.0.min.js"></script>
+    <script src="./assets/layer/layer.js"></script>
+    <script src="./assets/jp1/axios.min.js"></script>
+    <script src="./assets/javascript/sql-wasm.js"></script>
+    <script src="./assets/jp3/json.js"></script>
+    <script type="text/x-template" id="item-template">
+      <li>
+          <div @click="onClickTree(item)">{{ item.text }}</div>
+          <ul>
+              <tree-item
+              class="item"
+              v-for="(child, index) in item.children"
+              :key="index"
+              :item="child"
+              ></tree-item>
+          </ul>
+      </li>
+    </script>
+    <link rel="stylesheet" href="./assets/css/application.css">
+    <style>
+        .top_right{
+            right: 0;
+        }
+        .bottom_left{
+            left: 0;
+            bottom: 0;
+        }
+        .bottom_right{
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="top-header">
+            <div class="organ">
+                <div class="link border" v-on:click="openTree">{{CurDeptTitle}}</div>
+                <!-- 年份切换，暂时注释掉 -->
+                <!-- <div style="display: inline-flex;justify-content: center; align-items: center; margin-left: 30px;">
+                    <img src="assets/images/zuo.png" alt="" style="width: 20px; height: 20px;" @click="year_l()">
+                    <div class="link border" style="margin: 0 5px;">{{CurYear}}</div>
+                    <img src="assets/images/you.png" alt="" style="width: 20px; height: 20px;" @click="year_r()">
+                </div> -->
+            </div>
+            <div class="center-title">组织生活</div>
+            <div class="data-update-time">
+                <div>
+                    <h3> 数据更新时间 </h3>
+                    <p>{{ UpTime }}</p>
+                </div>
+                <a href="index.html" class="link border">返回</a>
+            </div>
+        </div>
+        <div class="tree" v-if="treeIsOpen">
+            <ul>
+                <tree-item class="item" :item="treeData"></tree-item>
+            </ul>    
+        </div>
+        <div style="width: 29vw; float:left; margin:0 1vw; height: 90vh;">
+            <div class="left" style="width: 100%; height: 44vh; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">组织生活总览</div>
+                    <div class="echarts-wrap" ref="hdzl"></div>
+                </div>
+            </div>
+            <div class="left" style="width: 100%; height: 44vh; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">活动类型情况</div>
+                    <div class="echarts-wrap">
+                        <div class="echarts-wrap-item" ref="lxhdl"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="width: 68vw; float:left;height: 90vh;">
+            <div class="flex" style="width: 100%; height: 44vh; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">党组织活动情况</div>
+                    <div class="echarts-wrap">
+                        <div class="echarts-wrap-item" ref="zzhdl"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="center" style="width: 37vw; float: left; height: 44vh; margin-right: 1vw; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right" style="right: 0;"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right" style="right: 0;"></span>
+                <div class="border_box"> 
+                    <div class="data-title">活动出勤率</div>
+                    <div class="echarts-wrap">
+                        <div class="echarts-wrap-item" ref="hdcql"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="right" style="width: 30vw; float: left; height: 44vh; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">计划安排情况</div>
+                    <div class="echarts-wrap">
+                        <div class="echarts-wrap-item" ref="jhzl"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- ---------------------------type="text/babel" -->
+<script type="text/babel">
+function rq(variable) {
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){return pair[1];}
+    }
+    return "";
+}
+var DEFAULT_STR_TMP=(rq("t")=="")?"":"TMP";
+var DEFAULT_PAGE='03';
+var hdzl_kv=[];
+var zzhdl_k=[];
+var zzhdl_v1=[];
+var zzhdl_v2=[];
+var zzhdl_v3=[];
+var zzhdl_v4=[];
+var lxhdl_k=[];
+var lxhdl_v1=[];
+var lxhdl_v2=[];
+var hdcql_kv=[];
+var hdcql_kvs=[];
+var jlzl_kv=[];
+var jlzl_k=[];
+var jlzl_v1=[];
+var jlzl_v2=[];
+
+//按Code得到下钻URL
+var lstConfig=[];
+function getConfigUrlByCode(c) {
+    for(var i=0;i<lstConfig.length;i++) {
+        if(lstConfig[i].c==c) {
+            var u=lstConfig[i].url
+            if(u=='')u="/not_configed";
+            return u;
+        }
+    }
+    return "/not_configed";
+}
+
+//设置单一条目的下钻URL
+var lstUrl=[];
+function set_url(k,v) {
+    for(i=0;i<lstUrl.length;i++) {
+        if(lstUrl[i].k==k) {
+            lstUrl[i].v=v;
+            return;
+        }
+    }
+    lstUrl.push({k:k,v:v});
+}
+
+function get_url(k) {
+    for(i=0;i<lstUrl.length;i++) {
+        if(lstUrl[i].k==k) {
+            return lstUrl[i].v;
+        }
+    }
+    return "";
+}
+
+Vue.component("tree-item", {
+    template: "#item-template",
+    props: {
+        item: Object
+    },
+    methods: {
+        onClickTree:function(x){
+            app.treeIsOpen=false;
+            app.CurDeptTitle=x.text;  // x.text;
+            app.CurDeptGuid=x.id; //x.id;
+            // console.log(app.CurDeptTitle)
+            // console.log(app.CurDeptGuid)
+            app.reload_page();
+        }
+    }
+});
+
+//弹出下钻窗口
+function open_(u,t) {
+    if(u!=null && u!='') {
+        top.openWindowNew({
+            title: t,
+            maxmin: true,
+            area: ['85%', '620px'],
+            content: u
+        }, this, "back");
+    }
+}
+
+var db=null;
+var charts=[];
+for(var i=0;i<20;i++) {
+    charts.push(null);
+}
+
+
+function set_jlzl_kv(typ,k,v,url) {
+    var bFound=false;
+    for(var i=0;i<jlzl_k.length;i++) {
+        if(jlzl_k[i]==k) {
+            if(typ==1) {
+                jlzl_v1[i]={
+                    value:v*1,
+                    url:url
+                };
+            }
+            if(typ==2) {
+                jlzl_v2[i]={
+                    value:v*1,
+                    url:url
+                };      
+            }
+            return;
+        }
+    }
+    jlzl_k.push(k);
+    if(typ==1) {
+        jlzl_v1.push({
+            value:v*1,
+            url:url
+        });
+        jlzl_v2.push({
+            value:0,
+            url:url
+        });  
+    }
+    if(typ==2) {
+        jlzl_v1.push({
+            value:0,
+            url:url
+        });
+        jlzl_v2.push({
+            value:v*1,
+            url:url
+        });        
+    }
+}
+
+function set_zzhdl_kv(typ,k,v,url) {
+
+    for(var i=0;i<zzhdl_k.length;i++) {
+        if(zzhdl_k[i]==k) {
+            if(typ==1){ zzhdl_v1[i]={value:v*1,url:url}; }
+            if(typ==2){ zzhdl_v2[i]={value:v*1,url:url}; }
+            if(typ==3){ zzhdl_v3[i]={value:v*1,url:url}; }
+            if(typ==4){ zzhdl_v4[i]={value:v*1,url:url}; }           
+            return;
+        }
+    }
+   
+    zzhdl_k.push(k);
+    if(typ==1) {
+        zzhdl_v1.push({value:v*1,url:url});
+        zzhdl_v2.push({value:0,url:url});  
+        zzhdl_v3.push({value:0,url:url});  
+        zzhdl_v4.push({value:0,url:url});  
+    }
+    if(typ==2) {
+        zzhdl_v1.push({value:0,url:url});
+        zzhdl_v2.push({value:v*1,url:url});  
+        zzhdl_v3.push({value:0,url:url});  
+        zzhdl_v4.push({value:0,url:url});  
+    }
+    if(typ==3) {
+        zzhdl_v1.push({value:0,url:url});
+        zzhdl_v2.push({value:0,url:url});  
+        zzhdl_v3.push({value:v*1,url:url}); 
+        zzhdl_v4.push({value:0,url:url});
+    }
+    if(typ==4) {
+        zzhdl_v1.push({value:0,url:url});
+        zzhdl_v2.push({value:0,url:url});  
+        zzhdl_v3.push({value:0,url:url});  
+        zzhdl_v4.push({value:v*1,url:url});  
+    }
+}
+
+        var app = new Vue({
+        el: '#app',
+        data: {
+            CurDeptTitle:'',//当前组织名称
+            CurDeptGuid:'',//当前组织GUID
+            CurYear:new Date().getFullYear(),//当前年
+            ArrYears:[],//年份数组
+            PosYear:0,//年的指针
+            UpTime:'',
+
+            treeIsOpen: false, 
+            treeData:{},
+            url_t: false,
+            url_j: false,
+        },
+        created:function(){
+            var m=new Date().getMonth()+1;
+            if(m<10)m='0'+m;
+            var d=new Date().getDate() - 1;
+            if(d<10)d='0'+d;
+            var dtToday=(new Date().getFullYear())+'-'+m+'-'+d;
+            this.UpTime = dtToday + ' 16:02:59'
+            
+            this.url_t = this.getQueryVariable("t");
+            this.url_j = this.getQueryVariable("j");
+        },
+        mounted:function() { 
+            let _this = this
+            // initSqlJs({
+            //     locateFile: function(file){
+            //         console.log(file)
+            //         return './assets/javascript/'+file
+            //     }
+            // }).then(
+            //     function(SQL){
+            //         db = new SQL.Database();
+            //         db.run("CREATE TABLE cfg (c,name,url,tim);");
+            //         db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+            //         _this.fetch_party_dept();
+            //     }
+            // ).catch(function (error) {
+                
+            // });   
+            // this.$nextTick(function(){})
+            _this.fetch_party_dept();
+        },
+        methods: {
+            year_l() {
+                this.PosYear = --this.PosYear < 0?0:this.PosYear--;
+                this.CurYear=this.ArrYears[this.PosYear];
+                // console.log(this.CurYear)
+                this.reload_page();
+            },
+            year_r() {
+                this.PosYear++;
+                this.PosYear = ++this.PosYear > this.ArrYears.length - 1?this.ArrYears.length - 1:this.PosYear++;
+                this.CurYear=this.ArrYears[this.PosYear];
+                // console.log(this.CurYear)
+                this.reload_page();
+            },
+            getQueryVariable:function(variable) {
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                for (var i=0;i<vars.length;i++) {
+                        var pair = vars[i].split("=");
+                        if(pair[0] == variable){return pair[1];}
+                }
+                return(false);
+            },
+            openTree:function(){
+                this.treeIsOpen = !this.treeIsOpen
+            },
+            reloadChart:function(){
+                var idx=0;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.hdzl)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,'活动管理页面');
+                    });
+                }
+                charts[idx].setOption(getp3_hdzl(hdzl_kv))
+
+                idx++;
+                if(charts[idx]==null)
+                {
+                    charts[idx]=echarts.init(this.$refs.zzhdl)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,'党组织活动情况');
+                    });
+                }
+                charts[idx].setOption(getp3_zzhdl(zzhdl_k,zzhdl_v1,zzhdl_v2,zzhdl_v3,zzhdl_v4));
+
+                idx++;
+                if(charts[idx]==null) {
+                    charts[idx]=echarts.init(this.$refs.lxhdl)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,"活动类型情况");
+                    });
+                }
+                // console.log(lxhdl_k,lxhdl_v1,lxhdl_v2)
+                charts[idx].setOption(getp3_lxhdl(lxhdl_k,lxhdl_v1,lxhdl_v2))
+
+                idx++;
+                if(charts[idx]==null) {
+                    charts[idx]=echarts.init(this.$refs.hdcql)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u);
+                    });
+                }
+                charts[idx].setOption(getp3_hdcql(hdcql_kv))
+
+                idx++;
+                if(charts[idx]==null) {
+                    charts[idx]=echarts.init(this.$refs.jhzl)
+                    charts[idx].on('click',function(p){
+                        var u=p.data.url;
+                        open_(u,'计划安排情况页面');
+                    });
+                }
+                charts[idx].setOption(getP3_jhwcqk(jlzl_k,jlzl_v1,jlzl_v2));
+            },
+            init:function() {
+
+            },
+            fetch_party_dept:function(){
+                let _this = this;
+                if(this.url_j){
+                    var j=jp3Json1
+                    var partys=j.obj;
+                    this.CurDeptTitle=partys.text;               
+                    this.CurDeptGuid=partys.id;               
+                    this.treeData=partys;                     
+                    this.reload_page(); 
+                }else{
+                    axios.get('/dj_web/bigscreen/bigscreenAPIAction!partyAdministrativeTree.action?partyAdministrative.boolPublicValue=false&strIsDiff=2&numIsLose=1', {
+                        params: {
+                            token: 'token',
+                        }
+                    })
+                    .then(function (ret) {
+                        // console.log("获取党组织...")
+                        var j=JSON.parse(ret.data);
+                        var partys=j.obj;
+                        _this.CurDeptTitle=partys.children[0].text;               
+                        _this.CurDeptGuid=partys.children[0].id;                  
+                        _this.treeData=partys;               
+                        _this.reload_page(); 
+                    })
+                    .catch(function (error) {
+                    });
+                }
+            },
+            reload_page:function(){
+                // console.log("加载本屏数据源...");
+                //app.CurDeptGuid='ee63ce9e4cc342f591e9ce6741d3f124';
+                // console.log("组织GUID="+app.CurDeptGuid);
+                var j=undefined;
+                //年份
+                var years=undefined;
+                var setupDatas=undefined;
+                var staticDatas=undefined;
+
+                let _this = this;
+                if(this.url_j){
+                    j=jp3Json2
+                    //年份
+                    years=j.objList.years;
+                    setupDatas=j.objList.setupDatas;
+                    staticDatas=j.objList.staticDatas;
+                    
+                }else{
+                    axios.get('/dj_web/bigscreen/bigscreenAPIAction!getStaticDataByDept.action', {
+                        params: {
+                            "searchData.strDept":this.CurDeptGuid,
+                            "searchData.strP":DEFAULT_PAGE,
+                            "searchData.strYear":this.CurYear,
+                            "searchData.strTmp":DEFAULT_STR_TMP,//TMP
+                        }
+                    })
+                    .then(function (ret) {
+                        var data=ret.data;
+                        j=JSON.parse(data)
+                        //年份
+                        years=j.objList.years;
+                        setupDatas=j.objList.setupDatas;
+                        staticDatas=j.objList.staticDatas;
+                        // console.log(years)
+                        // console.log("配置信息")
+                        _this.ArrYears=[];
+                        for(var i=0;i>years.length;i++){
+                            _this.ArrYears.push(years[i]*1);
+                        }
+                        // years.forEach((x,i)=>{
+                        //     //console.log(x);
+                        //     app.ArrYears.push(x*1);
+                        // });
+                        //从小到大排序
+                        
+                        var arrYears = years.sort(function(a,b){
+                            return a-b;
+                        })
+                        _this.ArrYears = arrYears
+                        //取当前年，设置指针
+                        for(var i=0;i<_this.ArrYears.length;i++){
+                            if(_this.ArrYears[i]==_this.CurYear)
+                            {
+                                _this.PosYear=i;
+                            }
+                        }
+                        // app.ArrYears.forEach((x,i)=>{
+                        //     if(x==app.CurYear)
+                        //     {
+                        //         app.PosYear=i;
+                        //     }
+                        // });
+                        
+                        lstConfig=[];
+                        // db.run("drop TABLE cfg ");
+                        // db.run("CREATE TABLE cfg (c,name,url,tim);");
+                        for(var i=0;i<setupDatas.length;i++){
+                            var x = setupDatas[i];
+                            lstConfig.push({
+                                "c":x.strStatCode,
+                                "name":x.strStatName,
+                                "url":x.strStatUrl,
+                                "tim":x.strStatInterval,
+                            });
+
+                            // db.exec("insert into cfg (c,name,url,tim) values ($c,$name,$url,$tim)",{
+                            //     "$c":x.strStatCode,
+                            //     "$name":x.strStatName,
+                            //     "$url":x.strStatUrl,
+                            //     "$tim":x.strFormattedTime,
+                            // })
+                        }
+                        window.localStorage.setItem('cfg',JSON.stringify(lstConfig))
+                        // setupDatas.forEach((x,i)=>{
+                        //     //console.log(x)
+
+                        //     lstConfig.push({
+                        //         "c":x.strStatCode,
+                        //         "name":x.strStatName,
+                        //         "url":x.strStatUrl,
+                        //         "tim":x.strStatInterval,
+                        //     });
+
+                        //     db.exec("insert into cfg (c,name,url,tim) values ($c,$name,$url,$tim)",{
+                        //         "$c":x.strStatCode,
+                        //         "$name":x.strStatName,
+                        //         "$url":x.strStatUrl,
+                        //         "$tim":x.strFormattedTime,
+                        //     })
+                        // });
+
+                        for(var i=0;i<lstConfig.length;i++){
+                            if(_this.UpTime=='' && lstConfig[i].tim!='') {
+                                _this.UpTime=lstConfig[i].tim;
+                            }
+                        }
+
+                        // db.each("SELECT * from cfg", 
+                        //     function (row){
+                        //         //console.log(row)
+                        //         if(app.UpTime=='' && row.tim!='')
+                        //         {
+                        //             app.UpTime=row.tim;
+                        //         }
+                        //     }
+                        // );
+                        
+                        //本屏数据
+                        // console.log("本屏具体数据");
+                        var tbl = [];
+                        // db.exec("drop table tbl ");
+                        // db.run("CREATE TABLE tbl (guid,y,m,dept,c,name,k,v,kid);");
+                        for(var i=0;i<staticDatas.length;i++){
+                            var x = staticDatas[i]
+                            var sameFlag = true;
+                        for(var j=0;j<tbl.length; j++) {
+                            if (tbl[j].guid == x.strGuid) {
+                                sameFlag = false;
+                                break;
+                            }
+                             //活动总量活动
+                             if (tbl[j].guid != x.strGuid && tbl[j].c == x.strStatCode 
+                                && x.strStatCode == '030102'&&tbl[j].k == x.strStatKey) {
+                                    tbl[j].v = tbl[j].v*1 + x.strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            //活动总量计划
+                            if (tbl[j].guid != x.strGuid && tbl[j].c == x.strStatCode 
+                                && x.strStatCode == '030101'&&tbl[j].k == x.strStatKey) {
+                                    tbl[j].v = tbl[j].v*1 + x.strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            //活动类型情况
+                             if (tbl[j].guid != x.strGuid && tbl[j].c == x.strStatCode 
+                                && x.strStatCode == '0303'&&tbl[j].k == x.strStatKey) {
+                                    tbl[j].v = tbl[j].v*1 + x.strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            // 计划情况-完成
+                            if (tbl[j].guid != x.strGuid && tbl[j].c == x.strStatCode 
+                                && x.strStatCode == '0305'&&tbl[j].k == x.strStatKey) {
+                                    tbl[j].v = tbl[j].v*1 + x.strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                             // 计划情况-未完成
+                             if (tbl[j].guid != x.strGuid && tbl[j].c == x.strStatCode 
+                                && x.strStatCode == '0306'&&tbl[j].k == x.strStatKey) {
+                                    tbl[j].v = tbl[j].v*1 + x.strStatValue*1;
+                                sameFlag = false;
+                                break;
+                            }
+                            
+                        }
+                        if (sameFlag) {
+                            tbl.push({
+                                "guid":x.strGuid,
+                                "y":x.strStatYear,
+                                "m":x.strStatMonth,
+                                "dept":x.strStatDept,
+                                "c":x.strStatCode,
+                                "name":x.strStatName,
+                                "k":x.strStatKey,
+                                "v":x.strStatValue,
+                                "kid":x.strStatKId,
+                            })
+                        }
+                            // db.exec("insert into tbl (guid,y,m,dept,c,name,k,v,kid) values ($guid,$y,$m,$dept,$c,$name,$k,$v,$kid)",{
+                            //     "$guid":x.strGuid,
+                            //     "$y":x.strStatYear,
+                            //     "$m":x.strStatMonth,
+                            //     "$dept":x.strStatDept,
+                            //     "$c":x.strStatCode,
+                            //     "$name":x.strStatName,
+                            //     "$k":x.strStatKey,
+                            //     "$v":x.strStatValue,
+                            //     "$kid":x.strStatKId,
+                            // })
+                        }
+                        window.localStorage.setItem('tbl',JSON.stringify(tbl))
+                        // staticDatas.forEach((x,i)=>{
+                        //     //console.log(x);
+                        //     db.exec("insert into tbl (guid,y,m,dept,c,name,k,v,kid) values ($guid,$y,$m,$dept,$c,$name,$k,$v,$kid)",{
+                        //         "$guid":x.strGuid,
+                        //         "$y":x.strStatYear,
+                        //         "$m":x.strStatMonth,
+                        //         "$dept":x.strStatDept,
+                        //         "$c":x.strStatCode,
+                        //         "$name":x.strStatName,
+                        //         "$k":x.strStatKey,
+                        //         "$v":x.strStatValue,
+                        //         "$kid":x.strStatKId,
+                        //     })
+                        // });
+                        _this.reset_data();
+                        for(var i=0;i<tbl.length;i++){
+                            _this.make_packet(tbl[i]);
+                        }
+                        // db.each("SELECT * from tbl", 
+                        //     function (row){
+                        //         //console.log(row)
+                        //         app.make_packet(row);
+                        //     }
+                        // );
+
+                        // tbl.sort(function(a,b){
+                        //     return a.c - b.c
+                        // })
+
+                        for(var index=0;index<tbl.length;index++){
+                            var row = tbl[index];
+                            var c=row.c;
+                            var k=row.k;
+                            var v=row.v;
+                            var name=row.name;
+                            var kid=row.kid;
+                            var name=row.name;
+                            var deptid=_this.CurDeptGuid;
+                            var sd=_this.CurYear+'-01-01';
+                            var ed=_this.CurYear+'-12-31';
+                            //var url=getConfigUrlByCode(c)+''+kid+'&bs.deptId='+deptid+'&bs.bd='+sd+'&bs.ed='+ed;
+                            var url=getConfigUrlByCode(c);
+                            //活动总量
+                            if(c=='030101') {
+                                //计划
+                                url += "&strMenuParameter=partybrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                                var status = true;
+                                for(var i=0;i<hdzl_kv.length;i++){
+                                    if(hdzl_kv[i].name == k){
+                                        status = false;
+                                        hdzl_kv[i].value += (v - 1);
+                                    }
+                                }
+                                if(status){
+                                    hdzl_kv.push({
+                                        name: k,
+                                        value: v*1,
+                                        url:url
+                                    });
+                                }
+                            }
+                        
+                            if(c=='030102') {
+                                //活动
+                                url += "&strMenuParameter=partybrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                                var status = true;
+                                for(var i=0;i<hdzl_kv.length;i++){
+                                    if(hdzl_kv[i].name == k){
+                                        status = false;
+                                        hdzl_kv[i].value += (v - 1);
+                                    }
+                                }
+                                if(status){
+                                    hdzl_kv.push({
+                                        name: k,
+                                        value: v*1,
+                                        url:url
+                                    });
+                                }
+                            }
+                        
+                            //各组织活动量
+                            if(c=="030201") {
+                               
+                                //计划
+                                url += "&strMenuParameter=partybrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                                set_zzhdl_kv(1,k,v,url);
+                            }
+                        
+                            if(c=="030202") {
+                               
+                                //活动
+                                url += "&strMenuParameter=partybrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                                set_zzhdl_kv(2,k,v,url);
+                            }
+                        
+                            if(c=="030203") {
+                               
+                                //活动
+                                url += "&strMenuParameter=partybrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                                set_zzhdl_kv(3,k,v,url);
+                            }
+                        
+                            if(c=="030204") {
+                               
+                                //活动
+                                url += "&strMenuParameter=partybrain;"+ kid +";" +_this.CurYear+";"+deptid;
+                                set_zzhdl_kv(4,k,v,url);
+                            }
+                            
+                            //类型活动量
+                            if(c=="0303") {
+                                //活动
+                                url += "&strMenuParameter=typebrain;" + kid+";"+_this.CurYear+";"+deptid + "&endYear=2021";
+                                lxhdl_k.push(k);
+                                lxhdl_v1.push({value:v*1,url:url});
+                            }
+                        
+                            //活动出勤率
+                            if(c=='0304') {
+                                hdcql_kvs.push({
+                                    name: k,
+                                    value: v*1,
+                                    url:url,
+                                    kid:kid
+                                });
+                            }
+                        
+                            //计划安排情况
+                            if(c=='0305') {
+                                url += "&strMenuParameter=typestatesbrain;1;" + kid+";"+_this.CurYear+";"+deptid;
+                                set_jlzl_kv(1,k,v,url)
+                            }
+                        
+                            if(c=='0306') {
+                                url += "&strMenuParameter=typestatesbrain;2;" + kid+";"+_this.CurYear+";"+deptid;
+                                set_jlzl_kv(2,k,v,url)
+                            }
+                            
+                            // setTimeout(function(){
+                            // //app.reload_page();
+                            // },10000);
+                        }
+
+                        // 计算出勤率  
+                        /***********************start****************************/
+                        var hdcql_kvc = [];
+                       
+                        for (var hd = 0; hd < hdcql_kvs.length; hd++) {
+                            var falg = true;
+                            var hd_row = hdcql_kvs[hd];
+                            var cq = {};
+                            for (var hdc = 0; hdc < hdcql_kvc.length; hdc++) {
+                                falg = false;
+                                var hdc_row = hdcql_kvc[hdc];
+                                if (hd_row.name == hdc_row.name ) {
+                                    var v1 = 0;
+                                    var v2 = 0;
+                                    if (hd_row.kid == '未签到') {
+                                        v1 = hdc_row.value1*1;
+                                        v2 = hd_row.value*1  + hdc_row.value2*1;
+                                        cq = { name: hd_row.name, value1: v1*1, value2: v2*1, url:hd_row.url};
+                                        hdcql_kvc[hdc] = cq;
+                                        break;
+                                    } else if (hd_row.kid == '已签到') {
+                                        v1 = hd_row.value*1 + hdc_row.value1*1;
+                                        v2 = hd_row.value*1 + hdc_row.value2*1;
+                                        cq = { name: hd_row.name, value1: v1*1, value2: v2*1, url:hd_row.url};
+                                        hdcql_kvc[hdc] = cq;
+                                        break;
+                                    }
+                                } else {
+                                    falg = true;
+                                }
+                            }
+                            if (falg) {
+                                if (hd_row.kid == '未签到') {
+                                    cq = { name: hd_row.name, value1: 0, value2: hd_row.value*1, url:hd_row.url};
+                                } else if (hd_row.kid == '已签到') {
+                                    cq = { name: hd_row.name, value1: hd_row.value*1, value2: hd_row.value*1, url:hd_row.url};
+                                }
+                                hdcql_kvc.push(cq);
+                            }
+                        }
+                        for (var kv = 0; kv < hdcql_kvc.length; kv++) {
+                            var kvc = hdcql_kvc[kv];
+                            var value = (kvc.value1*1/kvc.value2*1).toFixed(2);
+                            hdcql_kv.push({
+                                name: kvc.name,
+                                value: value*100,
+                                url: kvc.url
+                            });
+                        }
+                        /***********************end****************************/
+                        _this.reloadChart();
+                    })
+                    .catch(function (error) {
+                    });
+                }
+            },
+            reset_data:function(){
+                // console.log("reset data...");
+                hdzl_kv=[];
+                zzhdl_k=[];
+                zzhdl_v1=[];
+                zzhdl_v2=[];
+                zzhdl_v3=[];
+                zzhdl_v4=[];
+                lxhdl_k=[];
+                lxhdl_v1=[];
+                lxhdl_v2=[];
+                hdcql_kv=[];
+                hdcql_kvs=[];
+                jlzl_kv=[];
+                jlzl_k=[];
+                jlzl_v1=[];
+                jlzl_v2=[];
+                this.reloadChart();
+            },
+            make_packet:function(r){
+                var guid=r.guid;
+                var dept=r.dept;
+                var y=r.y*1;
+                var m=r.m*1;
+                var c=r.c;
+                var name=r.name;
+                var k=r.k;
+                var v=r.v;
+                var kid=r.kid;
+            },
+        }
+    })
+
+    window.onresize = () => {
+        // console.log(devicePixelRatio) 
+    }
+    </script>
+</body>
+</html>

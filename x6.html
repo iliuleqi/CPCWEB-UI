@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>智慧-系统运营</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <!-- ---------------------------引入js文件 s -->
+  <script src="./assets/javascript/browser.min.js"></script>
+  <script src="./assets/javascript/browser-polyfill.min.js"></script>
+  <!-- ---------------------------引入js文件 e -->
+  <script src="./assets/javascript/vue.js"></script>
+  <!--调试版-->
+  <script src="./assets/javascript/echarts.min.js"></script>
+  <!-- <script src="./assets/javascript/datav.min.vue.js"></script> -->
+  <script src="./assets/jp6/hyyh.js"></script>
+  <script src="./assets/jp6/fwly.js"></script>
+  <script src="./assets/jp6/axios.min.js"></script>
+   <script src="./assets/jp6/json.js"></script>
+  <script type="text/javascript" src="./assets/javascript/components.js"></script>
+  <link rel="stylesheet" href="./assets/css/application.css">
+  <link rel="stylesheet" href="./assets/css/leo-vcps.css">
+  <script src="./assets/javascript/sql-wasm.js"></script>
+<style>
+    .date.sel-input .sel-date{
+        background-color: #fff !important;
+        color: #999 !important;
+        cursor: pointer;
+    }
+    .list-day>.days>a:hover, .list-month>a:hover, .list-year>a:hover{
+        background-color: #04bbb7 !important;
+        color: #fff !important;
+    }
+    .list-day>.days>a.active, .list-month>a.active, .list-year>a.active{
+        background-color: #04bbb7 !important;
+        color: #fff !important;
+    }
+    .full{
+        height: 80%;
+        width: 100%;
+    }
+    .top_right{
+        right: 0;
+    }
+    .bottom_left{
+        left: 0;
+        bottom: 0;
+    }
+    .bottom_right{
+        right: 0;
+        bottom: 0;
+    }
+</style>
+</head>
+<body>
+<dv-full-screen-container>
+  <div id="app">
+        <div id="top-header">
+            <div class="organ">
+                </div>
+            <div class="center-title">系统运营{{aaa}}</div>
+            
+            <div class="data-update-time">
+                <div>
+                   
+                </div>
+                <a href="index.html" class="link border">返回</a>
+            </div>
+            
+        </div>
+        <div style="width: 28vw; margin: 0 1vw; height: 90vh; float: left;">
+            <div style="width: 100%; height: 32vh; margin-bottom: 1vh; position: relative;">
+               
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title">
+                        活跃用户
+                        <leo-date :sdata="setDataa" :sel-obj="dateObj" :sel-key="'d1'"></leo-date>
+                    </div>                
+                    <div ref="hyyh" style="width: 90%; height: 250px; margin: 0 auto"></div>
+                </div>
+            </div>
+
+            <div style=" height: 100%; height: 24vh; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box">
+                    <div class="data-title">
+                        访问来源
+                        <leo-date :sdata="setDataa" :sel-obj="dateObj" :sel-key="'d2'"></leo-date>
+                    </div>
+                    <div ref="fwly" class="echarts-wrap"></div>
+                </div>
+            </div>
+            <div style=" height: 15vh; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box" >
+                    <div class="data-title"> 用户激活率 </div>
+                    <!-- <dv-digital-flop 
+                        :config="configJHL" 
+                        class="echarts-wrap"
+                        :color="['red', 'green']" backgroundColor="blue" 
+                    /> -->
+                    <div style="text-align: center;font-size:48px;color:#04bbb7"  >{{configJHL.number[0]}}/{{configJHL.number[1]}}</div>
+                </div>
+            </div>
+            <div style=" height: 15vh; margin-bottom: 1vh;position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box" >
+                    <div class="data-title"> 在线用户 </div>
+                    <!-- <dv-digital-flop 
+                        :config="configZXYH" 
+                        class="echarts-wrap" 
+                        :color="['red', 'green']"
+                        backgroundColor="blue"
+                    /> -->
+                    <div style="text-align: center;font-size:48px;color:#04bbb7"  >{{configZXYH.number[0]}}</div>
+                </div>
+            </div>
+            
+        </div>
+        <div  style="width: 69vw; height: 90vh; float: left;">
+            <div style="width: 100%; height: 32vh; margin-bottom: 1vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box"> 
+                    <div class="data-title"> 
+                        历史访问量 
+                    </div>
+                    <div style="position: relative">
+                        <div class="prev" @click="p_llfwl(-1)"  style="cursor: pointer;"></div>
+                        <div ref="historys" style="width: 90%; height: 250px; margin: 0 auto"></div>
+                        <div class="next" @click="p_llfwl(1)"  style="cursor: pointer;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="width: 100%; height: 56vh; position: relative;">
+                <span class="top_left"></span>
+                <span class="top_right"></span>
+                <span class="bottom_left"></span>
+                <span class="bottom_right"></span>
+                <div class="border_box">
+                    <div class="data-title">
+                        操作日志
+                        <leo-date :sdata="setDataa" :sel-obj="dateObj" :sel-key="'d3'"></leo-date>
+                    </div>
+                    <div style="position: relative; height: 100%;">
+                        <div class="prev" @click="p_czrz(-1)"  style="cursor: pointer;"></div>
+                        <table class="logs" cellpadding="0" border="0" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <td>序号</td>
+                                    <td>用户</td>
+                                    <td>菜单</td>
+                                    <td>动作</td>
+                                    <td>操作数据</td>
+                                    <td>状态</td>
+                                    <td>操作时间</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item,i) in lstLogs" >
+                                    <td style="padding-left:10px;">{{item.id}}</td>
+                                    <td>{{item.User}}</td>
+                                    <td>{{item.Menu}}</td>
+                                    <td>{{item.Action}}</td>
+                                    <td>{{item.Method}}</td>
+                                    <td>{{item.Stat}}</td>
+                                    <td>{{item.Dt}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="next" @click="p_czrz(1)"  style="cursor: pointer;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dv-full-screen-container>
+
+<script  type="text/babel">
+var m=new Date().getMonth()+1;
+if(m<10)m='0'+m;
+var d=new Date().getDate() - 1;
+if(d<10)d='0'+d;
+var dtToday=(new Date().getFullYear())+'-'+m+'-'+d;
+
+Vue.prototype.$echarts = echarts;
+
+var BaseUrl="../dj_web/bigscreen/bigscreenAPIAction!getStaticDataForOperatioon.action?";
+var dt_01=dtToday;
+var dt_03=dtToday;
+var dt_06=dtToday;
+var page_02=1;
+var page_06=1;
+//操作日志下钻地址
+var operationLogUrl = "../dj_web/base/operatingLogAction.action?strPublicParameter=partybrain";
+//登录日志下钻地址
+var loginLogUrl = "../dj_web/base/loginLogAction.action?strPublicParameter=partybrain";
+var charts = [];
+for (var i = 0; i < 20; i++) {
+    charts.push(null);
+}
+
+function p_llfwl(i)
+{
+    page_02=page_02+i;
+    if(page_02<1)page_02=1;
+    app.fetch_02();
+}
+
+function p_czrz(i)
+{
+    page_06=page_06+i;
+    if(page_06<1)page_06=1;
+    app.fetch_06();
+}
+
+//弹出下钻窗口
+function open_(u, t) {
+    // console.log(u)
+    if (u != null && u != '') {
+        top.openWindowNew({
+            title: t,
+            maxmin: true,
+            area: ['85%', '620px'],
+            content: u
+        }, this, "back");
+    }
+}
+
+var app = new Vue({
+    el: '#app',
+    data: {
+        CurDeptTitle: '',//当前组织名称
+        CurDeptGuid: '',//当前组织GUID
+        CurYear: new Date().getFullYear(),//当前年
+        UpTime: '',
+        arrx: [],
+        arry: [],
+        chartsHistory: undefined,
+        lstFwly: [],
+        lstHyyh: [],
+        lstHyyh_x: [],
+        lstLogs: [],
+        historUrl: [],
+        optionLs: {},
+        optionLy: {
+            series: [
+                {
+                    type: 'pie',
+                    data: [
+                        {name: 'PC', value: 93},
+                        {name: '手机', value: 44},
+                    ],
+                    radius: ['50%', '80%'],
+                    insideLabel: {
+                        show: false
+                    },
+                    outsideLabel: {
+                        formatter: '{name} {percent}% \n\n总计{value} 次',
+                        style: {
+                            fontSize: 16,
+                            textAlign: 'left',
+                            lineHeight: 30,
+                            color: "#FFF"
+                        },
+                        labelLineBendGap: '40%',
+                        labelLineEndLength: 80,
+                        labelLineStyle: {
+                            lineWidth: 1
+                        }
+                    }
+                }
+            ],
+            color: ['#4be5ff', '#f28300', '#ff7194', '#eb90cf'],
+        },
+        configJHL: {
+            number: [0, 0],
+            content: '{nt}/{nt}',
+            style: {
+                fontSize: 65
+            }
+        },
+        configZXYH: {
+            number: [0],
+            content: '{nt}',
+            style: {
+                fontSize: 65
+            }
+        },
+        dateObj: {
+            d1: dtToday,
+            d2: dtToday,
+            d3: dtToday
+        },
+        openUrlFlag: false,
+        aaa: '',
+
+        url_t: false,
+        url_j: false,
+    },
+    created(){
+        this.url_j = this.getQueryVariable("j");
+        this.url_t = this.getQueryVariable("t");
+        //(this.url_t,this.url_j)
+    },
+    mounted() { 
+        this.fetch_01();
+        this.fetch_02();
+        this.fetch_03();
+        this.fetch_04();
+        this.fetch_05();
+        this.fetch_06();
+    },
+    methods: {
+        p_llfwl(i)
+        {
+            page_02=page_02+i;
+            if(page_02<1)page_02=1;
+            this.fetch_02();
+        },
+        p_czrz(i)
+        {
+            page_06=page_06+i;
+            if(page_06<1)page_06=1;
+            this.fetch_06();
+        },
+        getQueryVariable(variable)
+        {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i=0;i<vars.length;i++) {
+                    var pair = vars[i].split("=");
+                    if(pair[0] == variable){return pair[1];}
+            }
+            return(false);
+        },
+        dayClick:function(){
+            // console.log(12313)
+            
+        },
+        setDataa(_type,v){
+            switch(_type){
+                case 'd1':
+                    // console.log("活跃用户")
+                    dt_01=v;
+                    this.fetch_01();
+                    break;
+                case 'd2':
+                    // console.log("访问来源 ")
+                    dt_03=v;
+                    this.fetch_03();
+                    break;
+                case 'd3':
+                    // console.log("操作日志")
+                    dt_06=v;
+                    page_06=1;
+                    this.fetch_06();
+                    break;
+            }
+        },
+        reloadChart(){
+            var idx = 0;
+            if (charts[idx] == null) {
+                charts[idx] = echarts.init(this.$refs.hyyh)
+                charts[idx].on('click', function (p) {
+                    var u = p.data.url;
+                    open_(u, '活跃用户');
+                });
+            }
+            // console.log(charts[idx])
+           // console.log(this.lstHyyh_x,this.lstHyyh)
+            charts[idx].setOption(getHyyh(this.lstHyyh, this.lstHyyh_x))
+
+            idx++;
+            if (charts[idx] == null) {
+                charts[idx] = echarts.init(this.$refs.fwly)
+                charts[idx].on('click', function (p) {
+                    var u = p.data.url;
+                    open_(u, "访问来源");
+                })
+            }
+            charts[idx].setOption(getFwly(this.lstFwly))
+
+            /* echarts.init(this.$refs.hyyh).setOption(getHyyh(app.lstHyyh,app.lstHyyh_x))
+                echarts.init(this.$refs.fwly).setOption(getFwly(app.lstFwly))*/
+              
+        },
+        fetch_01(){
+            let _this = this;
+            if(this.url_j){
+                var data=jp6Json1
+                // console.log(data)
+            
+                //活跃用户
+                var K0601=data.objList;
+                this.lstHyyh=[];
+                this.lstHyyh_x=[];
+              
+                for(var i=0;i<K0601.length;i++){
+                    if(i>10)return;
+                    var url = operationLogUrl + "&strMenuParameter=activeUser;" + dt_01 + ";" + K0601[i].strKey;
+                    this.lstHyyh_x.push(K0601[i].strKey);
+                    this.lstHyyh.push({value: K0601[i].strValue * 1, url: url});
+                }
+                // K0601.forEach((x,i)=>{
+                //     if(i>10)return;
+                //     var url = operationLogUrl + "&strMenuParameter=activeUser;" + dt_01 + ";" + x.strKey;
+                //     this.lstHyyh_x.push(x.strKey);
+                //     this.lstHyyh.push({value: x.strValue * 1, url: url});
+                // });
+                
+                //重绘echarts表格
+                _this.reloadChart();
+            }else{
+                axios.get(BaseUrl, {
+                    params: {
+                        'searchData.searchType': '01',
+                        'searchData.searchDate': dt_01,
+                    }
+                })
+                .then(function (ret) {
+                    var j=ret.data;                
+                    var data=JSON.parse(j);
+                    // console.log(data)
+                
+                    //活跃用户
+                    var K0601=data.objList;
+                    _this.lstHyyh=[];
+                    _this.lstHyyh_x=[];
+                    
+                    for(var i=0;i<K0601.length;i++){
+                    if(i>10)return;
+                    var url = operationLogUrl + "&strMenuParameter=activeUser;" + dt_01 + ";" + K0601[i].strKey;
+                    _this.lstHyyh_x.push(K0601[i].strKey);
+                    _this.lstHyyh.push({value: K0601[i].strValue * 1, url: url});
+                }
+                    // K0601.forEach((x,i)=>{
+                    //     if(i>10)return;
+                    //     var url = operationLogUrl + "&strMenuParameter=activeUser;" + dt_01 + ";" + x.strKey;
+                    //     _this.lstHyyh_x.push(x.strKey);
+                    //     _this.lstHyyh.push({value: x.strValue * 1, url: url});
+                    // });
+                   // console.log(_this.lstHyyh_x,_this.lstHyyh)
+                    //重绘echarts表格
+                    _this.reloadChart();
+                })
+                .catch(function (error) {
+                });
+            }
+        },
+        fetch_02(){
+            let _this = this;
+            if(this.url_j){
+                var data=jp6Json2
+                // console.log(data)
+            
+                //历史访问量
+                var K0602=data.objList;
+                this.arrx=[];
+                this.arry=[];
+
+                for(var i=0;i<K0602.length;i++){
+                    var url = operationLogUrl + "&strMenuParameter=historicalAccess;" + dt_01;
+                    this.arrx.push(right(K0602[i].strKey, 5));
+                    this.arry.push(K0602[i].strValue * 1);
+                    this.historUrl.push(url);
+                }
+                // data.objList.forEach((x,i)=>{
+                //     var url = operationLogUrl + "&strMenuParameter=historicalAccess;" + dt_01;
+                //     this.arrx.push(right(x.strKey, 5));
+                //     this.arry.push(x.strValue * 1);
+                //     this.historUrl.push(url);
+                // });
+                this.chartsHistory = null;
+                this.chartsHistory = echarts.init(this.$refs.historys);
+                this.chartsHistory.setOption(getLs(this.arrx,this.arry));
+                this.chartsHistory.on('click',function(param){
+                    open_(this.historUrl[param.dataIndex],"历史访问量页面")
+                })
+            }else{
+                axios.get(BaseUrl, {
+                    params: {
+                        'searchData.searchType': '02',
+                        'searchData.pageIndex': page_02,
+                        'searchData.pageSize': 10,
+                    }
+                })
+                .then(function (ret) {
+                    var j=ret.data;                
+                    var data=JSON.parse(j);
+                    // console.log(data)
+                
+                    //历史访问量
+                    _this.arrx=[];
+                    _this.arry=[];
+                    var K0602=data.objList;
+                    for(var i=0;i<K0602.length;i++){
+                    var url = operationLogUrl + "&strMenuParameter=historicalAccess;" + dt_01;
+                    _this.arrx.push(right(K0602[i].strKey, 5));
+                    _this.arry.push(K0602[i].strValue * 1);
+                    _this.historUrl.push(url);
+                    }
+                    // data.objList.forEach((x,i)=>{
+                    //     var url = operationLogUrl + "&strMenuParameter=historicalAccess;" + dt_01;
+                    //     _this.arrx.push(right(x.strKey, 5));
+                    //     _this.arry.push(x.strValue * 1);
+                    //     _this.historUrl.push(url);
+                    // });
+                    _this.chartsHistory = null;
+                    _this.chartsHistory = echarts.init(_this.$refs.historys);
+                    _this.chartsHistory.setOption(getLs(_this.arrx,_this.arry));
+                    _this.chartsHistory.on('click',function(param){
+                        open_(_this.historUrl[param.dataIndex],"历史访问量页面")
+                    })
+                })
+                .catch(function (error) {
+                });
+            }
+            
+
+        },
+        fetch_03(){
+            let _this = this;
+            if(this.url_j){
+                var data=jp6Json3
+                // console.log(data)
+                
+                //访问来源
+                var K0603=data.objList;
+                this.lstFwly=[];
+                for(var i=0;i<K0603.length;i++){
+                    var url = loginLogUrl + "&strMenuParameter=accessSource;" + (K0603[i].strKey == "PC端" ? 1 : 2);
+                    this.lstFwly.push({name: K0603[i].strKey, value: K0603[i].strValue * 1 + 0.001, url: url});
+                }
+                // console.log(this.lstFwly)
+                // K0603.forEach((x,i)=>{
+                //     var url = loginLogUrl + "&strMenuParameter=accessSource;" + (x.strKey == "PC端" ? 1 : 2);
+                //     this.lstFwly.push({name: x.strKey, value: x.strValue * 1 + 0.001, url: url});
+                // });
+                
+                //重绘echarts表格
+                this.reloadChart();
+            }else{
+                axios.get(BaseUrl, {
+                    params: {
+                        'searchData.searchType': '03',
+                        'searchData.searchDate': dt_03,
+                    }
+                })
+                .then(function (ret) {
+                    var j=ret.data;                
+                    var data=JSON.parse(j);
+                    // console.log(data)
+                    
+                    //访问来源
+                    var K0603=data.objList;
+                    _this.lstFwly=[];
+                    for(var i=0;i<K0603.length;i++){
+                        var url = loginLogUrl + "&strMenuParameter=accessSource;" + (K0603[i].strKey == "PC端" ? 1 : 2);
+                        _this.lstFwly.push({name: K0603[i].strKey, value: K0603[i].strValue * 1 + 0.001, url: url});
+                    }
+                    // K0603.forEach((x,i)=>{
+                    //     var url = loginLogUrl + "&strMenuParameter=accessSource;" + (x.strKey == "PC端" ? 1 : 2);
+                    //     _this.lstFwly.push({name: x.strKey, value: x.strValue * 1 + 0.001, url: url});
+                    // });
+                    
+                    //重绘echarts表格
+                    _this.reloadChart();
+                })
+                .catch(function (error) {
+                });
+            }
+        },
+        fetch_04(){//用户激活率
+            let _this = this;
+            if(this.url_j){
+                var data=jp6Json4
+                // console.log(data)
+                
+                //激活数，用户数
+                var a=0,b=0;
+                var K0604=data.objList;
+                for(var i=0;i<K0604.length;i++){
+                    if(K0604[i].strKey=='用户数')b=K0604[i].strValue*1;
+                    if(K0604[i].strKey=='激活数')a=K0604[i].strValue*1;
+                }
+                // data.objList.forEach((x,i)=>{
+                //     if(x.strKey=='用户数')b=x.strValue*1;
+                //     if(x.strKey=='激活数')a=x.strValue*1;
+                // });
+                this.configJHL={
+                    number: [a, b],
+                    content: '{nt}/{nt}',
+                    style:{
+                        fontSize: 50
+                    }
+                }
+            }else{
+                axios.get(BaseUrl, {
+                    params: {
+                        'searchData.searchType': '04',
+                    }
+                })
+                .then(function (ret) {
+                    var j=ret.data;                
+                    var data=JSON.parse(j)
+                    // console.log(data)
+                    
+                    //激活数，用户数
+                    var a=0;b=0;
+                    var K0604=data.objList;
+                    for(var i=0;i<K0604.length;i++){
+                        if(K0604[i].strKey=='用户数')b=K0604[i].strValue*1;
+                        if(K0604[i].strKey=='激活数')a=K0604[i].strValue*1;
+                    }
+                    // data.objList.forEach((x,i)=>{
+                    //     if(x.strKey=='用户数')b=x.strValue*1;
+                    //     if(x.strKey=='激活数')a=x.strValue*1;
+                    // });
+                    _this.configJHL={
+                        number: [a, b],
+                        content: '{nt}/{nt}',
+                        style:{
+                            fontSize: 50
+                        }
+                    }
+                                    
+                })
+                .catch(function (error) {
+                });
+            }
+            
+
+        },
+        fetch_05(){//在线用户
+            let _this = this;
+            if(this.url_j){
+                var data=jp6Json5
+                // console.log('在线用户...')
+                i=data.obj
+                if(i<1)i=1;
+                //在线用户数
+                this.configZXYH={
+                    number: [i],
+                    content: '{nt}',
+                    style:{
+                        fontSize: 65
+                    }
+                };
+            }else{
+                axios.get(BaseUrl, {
+                    params: {
+                        'searchData.searchType': '05',
+                    }
+                })
+                .then(function (ret) {
+                    var j=ret.data;                
+                    var data=JSON.parse(j)
+                    // console.log('在线用户...')
+                    i=data.obj
+                    if(i<1)i=1;
+                    //在线用户数
+                    _this.configZXYH={
+                        number: [i],
+                        content: '{nt}',
+                        style:{
+                            fontSize: 65
+                        }
+                    };
+                                    
+                })
+                .catch(function (error) {
+                });
+            }
+            
+
+        },
+        fetch_06(){
+            let _this = this;
+            if(this.url_j){
+                var data=jp6Json6
+                //console.log(data)
+            
+                //操作日志
+                var k06=data.objList;
+                this.lstLogs=[];
+                var idx=1;
+                for(var i=0;i<k06.length;i++){
+                    idx++;
+                    if(i>9)return;
+                    this.lstLogs.push({
+                    id:(i+1),
+                    User:k06[i].strUserName,
+                    Menu: k06[i].strMenuName,
+                    Action:k06[i].strOperateTypeName,
+                    Method:k06[i].strOperateProgramName,
+                    Stat:k06[i].strOperateStateName,
+                    Dt:left(k06[i].strOperateTime,19)});
+                }
+                // k06.forEach((x,i)=>{
+                //     idx++;
+                //     if(i>9)return;
+                //     this.lstLogs.push({
+                //         id:(i+1),
+                //         User:x.strUserName,
+                //         Menu: x.strMenuName,
+                //         Action:x.strOperateTypeName,
+                //         Method:x.strOperateProgramName,
+                //         Stat:x.strOperateStateName,
+                //         Dt:left(x.strOperateTime,19)});
+                // });
+                var l1=this.lstLogs.length
+                for(i=0;i<(10-l1);i++)
+                {
+                    this.lstLogs.push({
+                        id:'　',
+                        User:'　',
+                        Action:'　',
+                        Method:'　',
+                        Stat:'　',
+                        Dt:'　'});
+                }
+            }else{
+                axios.get(BaseUrl, {
+                    params: {
+                        'searchData.searchType': '06',
+                        'searchData.searchDate': dt_06,
+                        'searchData.pageIndex': page_06,
+                        'searchData.pageSize': 10,
+                    }
+                })
+                .then(function (ret) {
+                    var j=ret.data;                
+                    var data=JSON.parse(j)
+                    //console.log(data)
+                
+                    //操作日志
+                    var k06=data.objList;
+                    _this.lstLogs=[];
+                    idx=1;
+                    for(var i=0;i<k06.length;i++){
+                        idx++;
+                        if(i>9)return;
+                        _this.lstLogs.push({
+                        id:(i+1),
+                        User:k06[i].strUserName,
+                        Menu: k06[i].strMenuName,
+                        Action:k06[i].strOperateTypeName,
+                        Method:k06[i].strOperateProgramName,
+                        Stat:k06[i].strOperateStateName,
+                        Dt:left(k06[i].strOperateTime,19)});
+                    }
+                    // k06.forEach((x,i)=>{
+                    //     idx++;
+                    //     if(i>9)return;
+                    //     _this.lstLogs.push({
+                    //         id:(i+1),
+                    //         User:x.strUserName,
+                    //         Menu: x.strMenuName,
+                    //         Action:x.strOperateTypeName,
+                    //         Method:x.strOperateProgramName,
+                    //         Stat:x.strOperateStateName,
+                    //         Dt:left(x.strOperateTime,19)});
+                    // });
+                    var l1=_this.lstLogs.length
+                    for(i=0;i<(10-l1);i++)
+                    {
+                        _this.lstLogs.push({
+                            id:'　',
+                            User:'　',
+                            Action:'　',
+                            Method:'　',
+                            Stat:'　',
+                            Dt:'　'});
+                    }
+                                
+                })
+                .catch(function (error) {
+                });
+            }
+            
+
+        },
+        fetch_web(){
+            
+            let _this = this;
+            //console.log('sss.....');
+            axios.get('/rpt/6.jsp', {
+                params: {
+                    token: 'token',
+                }
+            })
+            .then(function (ret) {
+                var data=ret.data;
+                
+                //活跃用户
+                var K0601=data.K0601;
+                _this.lstHyyh=[];
+                _this.lstHyyh_x=[];
+                for(var i=0;i<K0601.length;i++){
+                    if(i>7)return;
+                    _this.lstHyyh_x.push(K0601[i].k);
+                    _this.lstHyyh.push(K0601[i].v*1);
+                }
+                // K0601.forEach((x,i)=>{
+                //     if(i>7)return;
+                //     this.lstHyyh_x.push(x.k);
+                //     this.lstHyyh.push(x.v*1);
+                // });
+
+
+                //历史访问量
+                var K0602=data.K0602;
+                _this.arrx=[];
+                _this.arry=[];
+                for(var i=0;i<K0602.length;i++){
+                    if(i>5)return;
+                    _this.arrx.push(right(K0602[i].k,5));
+                    _this.arry.push(K0602[i].v*1);
+                }
+                // K0602.forEach((x,i)=>{
+                //     if(i>5)return;
+                //     this.arrx.push(right(x.k,5));
+                //     this.arry.push(x.v*1);
+                // });
+                // this.optionLs=getLs(arrx,arry);
+                
+                //访问来源
+                var K0603=data.K0603;
+                _this.lstFwly=[];
+                for(var i=0;i<K0603.length;i++){
+                    if(i>7)return;
+                    _this.lstFwly.push({ name: K0603[i].k, value: K0603[i].v*1 });
+                }
+                // K0603.forEach((x,i)=>{
+                //     if(i>7)return;
+                //     this.lstFwly.push({ name: x.k, value: x.v*1 });
+                // });
+                
+
+                //操作日志
+                var k06=data.K0606;
+                _this.lstLogs=[];
+                for(var i=0;i<k06.length;i++){
+                    if(i>9)return;
+                    _this.lstLogs.push({
+                        id:(i+1),
+                        User:k06[i].USERNAME,
+                        Action:k06[i].OPER_TYPE,
+                        Method:k06[i].OPER_PROGRAM,
+                        Stat:x.OPER_RESULT,
+                        Dt:left(k06[i].OPER_DATE,10)});
+                }
+                // k06.forEach((x,i)=>{
+                //     if(i>9)return;
+                //     this.lstLogs.push({
+                //         id:(i+1),
+                //         User:x.USERNAME,
+                //         Action:x.OPER_TYPE,
+                //         Method:x.OPER_PROGRAM,
+                //         Stat:x.OPER_RESULT,
+                //         Dt:left(x.OPER_DATE,10)});
+                // });
+
+                //在线用户数
+                _this.configZXYH={
+                    number: [data.K0605],
+                    content: '{nt}',
+                    style:{
+                        fontSize: 65
+                    }
+                };
+                
+                //激活数，用户数
+                var a=0;b=0;
+                for(var i=0;i<data.K0604A.length;i++){
+                    a=data.K0604A[i].v*1;
+                }
+                for(var i=0;i<data.K0604B.length;i++){
+                    b=data.K0604B[i].v*1;
+                }
+                // data.K0604A.forEach((x,i)=>{
+                //     a=x.v*1;
+                // });
+                // data.K0604B.forEach((x,i)=>{
+                //     b=x.v*1;
+                // });
+                _this.configJHL={
+                    number: [a, b],
+                    content: '{nt}/{nt}',
+                    style:{
+                        fontSize: 65
+                    }
+                }
+                //重绘echarts表格
+                app.reloadChart();
+                
+            })
+            .catch(function (error) {
+            });
+        }
+}
+});
+
+function getLs(arrx,arry)
+{
+    //console.log(arrx,arry);
+    var ret={
+        grid: {
+            top: -20
+        }, 
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: arrx
+        },
+        xAxis: {
+            data: arrx,
+            axisLine:{
+                show: true,
+                lineStyle: {
+                    color: '#FFF',
+                    lineWidth: 1
+                }
+            },
+            nameTextStyle: {
+                fill: '#fff',
+                fontSize: 10
+            },
+            splitLine: {
+                show: false
+            },
+            axisTick: {
+                show: true,
+                style: {
+                    stroke: '#FFF',
+                    lineWidth: 1
+                }
+            },
+            axisLabel: {
+                style: {
+                    fill: '#FFF',
+                    fontSize: 16,
+                    rotate: 0
+                }
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min:0,
+            axisLine:{
+                show: true,
+                lineStyle: {
+                    color: '#FFF',
+                    lineWidth: 1
+                }
+            },
+            axisTick: {
+                show: false
+            },
+            splitLine: {
+                show: false
+            },
+            minInterval: 10,
+            axisLabel: {
+                style: {
+                    fill: '#FFF',
+                    fontSize: 12,
+                    rotate: 0
+                },
+                formatter: function (value, index) {    
+                  return value.toFixed(0);
+                 } 
+            }
+        },
+        series: [
+            {
+                data: arry,
+                type: 'line',
+                gradient: {
+                    color: ['#ec8009', '#0d1a4c']
+                },
+                barWidth: 18
+            }
+        ]
+    }
+
+    return ret;
+}
+
+
+
+function left(s,i)
+{
+	return s.substring(0,i>s.length?s.length:i);
+}
+
+function right(s,i)
+{
+	var a=0;
+	if(i>s.length)i=s.length;
+	return s.substring(s.length-i,s.length);
+}
+
+function mid(s,i,j)
+{
+	i=i-1;
+	if(i<0)i=0;
+	if(i>s.length)i=s.length;
+	var k=i+j;
+	if(k>s.length)k=s.length;
+	return s.substring(i,k);	
+}
+
+function len(s)
+{
+	return s.length;
+}
+
+function getpart(a,b,c)
+{
+	var i1=a.indexOf(b);
+	var i2=a.indexOf(c);
+	if(i1<0)return "";
+	if(i2<0)return "";
+	if(i2<i1)return "";
+	return a.substring(i1 + b.length,i2);
+}
+
+// function number_format(number, decimals, dec_point, thousands_sep, roundtag) {
+//     number = (number + '').replace(/[^0-9+-Ee.]/g, '');
+//     roundtag = roundtag || "ceil"; //"ceil","floor","round"
+//     var n = !isFinite(+number) ? 0 : +number,
+//         prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+//         sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+//         dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+//         s = '',
+//         toFixedFix = function (n, prec) {
+ 
+//             var k = Math.pow(10, prec);
+//             console.log();
+ 
+//             return '' + parseFloat(Math[roundtag](parseFloat((n * k).toFixed(prec*2))).toFixed(prec*2)) / k;
+//         };
+//     s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+//     var re = /(-?\d+)(\d{3})/;
+//     while (re.test(s[0])) {
+//         s[0] = s[0].replace(re, "$1" + sep + "$2");
+//     }
+ 
+//     if ((s[1] || '').length < prec) {
+//         s[1] = s[1] || '';
+//         s[1] += new Array(prec - s[1].length + 1).join('0');
+//     }
+//     return s.join(dec);
+// }
+  </script>
+</body>
+</html>
